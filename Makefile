@@ -62,7 +62,7 @@ $(BUILD_DIR):
 build-linux: prebuild-check deps generate ## Builds the Linux binary for the container image into bin/ folder
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -v $(LDFLAGS) -o $(BUILD_DIR)/$(PROJECT_NAME)
 
-.PHONY: test-unit
+.PHONY: image
 image: clean-artifacts build-linux ## Build the docker image
 	docker build -t $(REGISTRY_URL) \
 	  --build-arg BUILD_DIR=$(BUILD_DIR)\
