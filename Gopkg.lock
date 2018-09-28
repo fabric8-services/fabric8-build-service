@@ -246,6 +246,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -333,6 +339,12 @@
   version = "v1.2.1"
 
 [[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/zach-klippenstein/goregen"
   packages = ["."]
@@ -389,6 +401,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "57d27a5fb7324691311e8270da3d7e03647bd82506de1d06f618cdaf8bcd1057"
+  inputs-digest = "904f89955bd80907548bbbac507ab4c7951599d63a171fe0df324fc3a38a6373"
   solver-name = "gps-cdcl"
   solver-version = 1

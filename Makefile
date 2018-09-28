@@ -10,6 +10,9 @@ DESIGN_DIR=design
 DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -prune -o -name '*.go' -print)
 ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 
+# By default reduce the amount of log output from tests
+F8_LOG_LEVEL ?= error
+
 # declares variable that are OS-sensitive
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 ifeq ($(OS),Windows_NT)
@@ -70,7 +73,7 @@ image: clean-artifacts build-linux ## Build the docker image
 	  -f $(DOCKERFILE) .
 
 .PHONY: test-unit
-test-unit: prebuild-check $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check generate $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	AUTH_DEVELOPER_MODE_ENABLED=1 AUTH_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
