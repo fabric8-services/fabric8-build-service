@@ -15,4 +15,4 @@ RUN useradd --no-create-home -s /bin/bash ${F8_USER_NAME}
 # From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
 USER ${F8_USER_NAME}
 
-ENTRYPOINT [ "${PROJECT_NAME}" ]
+ENTRYPOINT [ "/usr/local/bin/fabric8-build-service" ]
