@@ -58,14 +58,14 @@ $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
 .PHONY: build-linux $(BUILD_DIR)
-build-linux: makefiles prebuild-check deps generate ## Builds the Linux binary for the container image into bin/ folder
+build-linux: prebuild-check deps generate ## Builds the Linux binary for the container image into bin/ folder
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -v $(LDFLAGS) -o $(BUILD_DIR)/$(PROJECT_NAME)
 
 image: clean-artifacts build-linux
 	docker build -t $(REGISTRY_URL) \
 	  --build-arg BUILD_DIR=$(BUILD_DIR)\
 	  --build-arg PROJECT_NAME=$(PROJECT_NAME)\
-	  -f $(VENDOR_DIR)/github.com/fabric8-services/fabric8-common/makefile/$(DOCKERFILE) .
+	  -f $(DOCKERFILE) .
 
 # -------------------------------------------------------------------
 # help!
@@ -92,7 +92,7 @@ $(TMP_PATH):
 	mkdir -p $(TMP_PATH)
 
 .PHONY: prebuild-check
-prebuild-check: $(TMP_PATH) $(INSTALL_PREFIX) 
+prebuild-check: $(TMP_PATH) $(INSTALL_PREFIX)
 # Check that all tools where found
 ifndef GIT_BIN
 	$(error The "$(GIT_BIN_NAME)" executable could not be found in your PATH)
@@ -110,15 +110,15 @@ endif
 $(DEP_BIN_DIR):
 	mkdir -p $(DEP_BIN_DIR)
 
-.PHONY: deps 
+.PHONY: deps
 deps: $(DEP_BIN) $(VENDOR_DIR) ## Download build dependencies.
 
 # install dep in a the tmp/bin dir of the repo
-$(DEP_BIN): $(DEP_BIN_DIR) 
+$(DEP_BIN): $(DEP_BIN_DIR)
 	@echo "Installing 'dep' $(DEP_VERSION) at '$(DEP_BIN_DIR)'..."
 	mkdir -p $(DEP_BIN_DIR)
 ifeq ($(UNAME_S),Darwin)
-	@curl -L -s https://github.com/golang/dep/releases/download/$(DEP_VERSION)/dep-darwin-amd64 -o $(DEP_BIN) 
+	@curl -L -s https://github.com/golang/dep/releases/download/$(DEP_VERSION)/dep-darwin-amd64 -o $(DEP_BIN)
 	@cd $(DEP_BIN_DIR) && \
 	curl -L -s https://github.com/golang/dep/releases/download/$(DEP_VERSION)/dep-darwin-amd64.sha256 -o $(DEP_BIN_DIR)/dep-darwin-amd64.sha256 && \
 	echo "1544afdd4d543574ef8eabed343d683f7211202a65380f8b32035d07ce0c45ef  dep" > dep-darwin-amd64.sha256 && \
@@ -133,8 +133,8 @@ endif
 
 $(VENDOR_DIR): Gopkg.toml
 	@echo "checking dependencies with $(DEP_BIN_NAME)"
-	@$(DEP_BIN) ensure -v 
-		
+	@$(DEP_BIN) ensure -v
+
 # -------------------------------------------------------------------
 # Code format/check
 # -------------------------------------------------------------------
@@ -155,7 +155,7 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 	&& exit 1 \
 	|| true
 
-.PHONY: analyze-go-code 
+.PHONY: analyze-go-code
 analyze-go-code: deps golint gocyclo govet ## Run a complete static code analysis using the following tools: golint, gocyclo and go-vet.
 
 ## Run gocyclo analysis over the code.
@@ -259,4 +259,3 @@ generate: prebuild-check $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR) ## Generate GOA 
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/status --out app
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers --out app
 	$(GOAGEN_BIN) swagger -d ${PACKAGE_NAME}/${DESIGN_DIR}
-	
