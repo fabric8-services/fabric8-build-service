@@ -8,13 +8,14 @@ SOURCE_DIR ?= .
 SOURCES := $(shell find $(SOURCE_DIR) -path $(SOURCE_DIR)/vendor -prune -o -name '*.go' -print)
 DESIGN_DIR=design
 DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -prune -o -name '*.go' -print)
+ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 
 # declares variable that are OS-sensitive
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 ifeq ($(OS),Windows_NT)
-include $(SELF_DIR)Makefile.win
+include $(SELF_DIR)/.make/Makefile.win
 else
-include $(SELF_DIR)Makefile.lnx
+include $(SELF_DIR)/.make/Makefile.lnx
 endif
 
 # This is a fix for a non-existing user in passwd file when running in a docker
@@ -48,10 +49,10 @@ REGISTRY_IMAGE = ${PROJECT_NAME}
 
 ifeq ($(TARGET),rhel)
 	REGISTRY_URL := ${REGISTRY_URI}/openshiftio/rhel-${REGISTRY_NS}-${REGISTRY_IMAGE}
-	DOCKERFILE := Dockerfile.rhel
+	DOCKERFILE := ./.make/Dockerfile.rhel
 else
 	REGISTRY_URL := ${REGISTRY_URI}/openshiftio/${REGISTRY_NS}-${REGISTRY_IMAGE}
-	DOCKERFILE := Dockerfile
+	DOCKERFILE := ./.make/Dockerfile
 endif
 
 $(BUILD_DIR):
@@ -61,16 +62,22 @@ $(BUILD_DIR):
 build-linux: prebuild-check deps generate ## Builds the Linux binary for the container image into bin/ folder
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -v $(LDFLAGS) -o $(BUILD_DIR)/$(PROJECT_NAME)
 
-image: clean-artifacts build-linux
+.PHONY: test-unit
+image: clean-artifacts build-linux ## Build the docker image
 	docker build -t $(REGISTRY_URL) \
 	  --build-arg BUILD_DIR=$(BUILD_DIR)\
 	  --build-arg PROJECT_NAME=$(PROJECT_NAME)\
 	  -f $(DOCKERFILE) .
 
+.PHONY: test-unit
+test-unit: prebuild-check $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
+	$(call log-info,"Running test: $@")
+	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
+	AUTH_DEVELOPER_MODE_ENABLED=1 AUTH_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
+
 # -------------------------------------------------------------------
 # help!
 # -------------------------------------------------------------------
-
 .PHONY: help
 help: ## Prints this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
@@ -158,18 +165,15 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 .PHONY: analyze-go-code
 analyze-go-code: deps golint gocyclo govet ## Run a complete static code analysis using the following tools: golint, gocyclo and go-vet.
 
-## Run gocyclo analysis over the code.
-golint: $(GOLINT_BIN)
+golint: $(GOLINT_BIN) ## Run gocyclo analysis over the code.
 	$(info >>--- RESULTS: GOLINT CODE ANALYSIS ---<<)
 	@$(foreach d,$(GOANALYSIS_DIRS),$(GOLINT_BIN) $d 2>&1 | grep -vEf .golint_exclude || true;)
 
-## Run gocyclo analysis over the code.
-gocyclo: $(GOCYCLO_BIN)
+gocyclo: $(GOCYCLO_BIN) ## Run gocyclo analysis over the code.
 	$(info >>--- RESULTS: GOCYCLO CODE ANALYSIS ---<<)
 	@$(foreach d,$(GOANALYSIS_DIRS),$(GOCYCLO_BIN) -over 10 $d | grep -vEf .golint_exclude || true;)
 
-## Run go vet analysis over the code.
-govet:
+govet: ## Run go vet analysis over the code.
 	$(info >>--- RESULTS: GO VET CODE ANALYSIS ---<<)
 	@$(foreach d,$(GOANALYSIS_DIRS),go tool vet --all $d/*.go 2>&1;)
 
