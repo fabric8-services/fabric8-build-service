@@ -40,7 +40,13 @@ required = [
   "github.com/goadesign/goa/goagen/utils",
   "github.com/goadesign/goa/goatest",
   "github.com/davecgh/go-spew/spew",
+<<<<<<< HEAD
   "github.com/haya14busa/goverage",
+=======
+  "github.com/golang/lint/golint",
+  "github.com/fzipp/gocyclo",
+  "github.com/jteeuwen/go-bindata/go-bindata",
+>>>>>>> Add postgresql support
   "github.com/pilu/fresh", # used to rebuild if source changed while running
 ]
 

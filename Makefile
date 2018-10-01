@@ -77,10 +77,10 @@ image: clean-artifacts build-linux ## Build the docker image
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check generate $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
-	AUTH_DEVELOPER_MODE_ENABLED=1 AUTH_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
+	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
 .PHONY: coverage
 coverage: prebuild-check deps $(SOURCES) ## Run coverage
@@ -184,6 +184,17 @@ analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the
 format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style
 	@gofmt -s -l -w ${GOFORMAT_FILES}
 
+# -------------------------------------------------------------------
+# Generate bindata
+# -------------------------------------------------------------------
+# Pack all migration SQL files into a compilable Go file
+migration/sqlbindata.go: $(GO_BINDATA_BIN) $(wildcard migration/sql-files/*.sql)
+	$(GO_BINDATA_BIN) \
+		-o migration/sqlbindata.go \
+		-pkg migration \
+		-prefix migration/sql-files \
+		-nocompress \
+		migration/sql-files
 
 # -------------------------------------------------------------------
 # support for running in dev mode
@@ -196,6 +207,13 @@ $(FRESH_BIN): $(VENDOR_DIR)
 # -------------------------------------------------------------------
 $(GOAGEN_BIN): $(VENDOR_DIR)
 	cd $(VENDOR_DIR)/github.com/goadesign/goa/goagen && go build -v
+
+# -------------------------------------------------------------------
+# support for generating bindatas
+# -------------------------------------------------------------------
+$(GO_BINDATA_BIN): $(VENDOR_DIR)
+	cd $(VENDOR_DIR)/github.com/jteeuwen/go-bindata/go-bindata && go build -v
+
 
 # -------------------------------------------------------------------
 # clean
@@ -222,6 +240,7 @@ CLEAN_TARGETS += clean-generated
 clean-generated:
 	-rm -rf ./app
 	-rm -rf ./swagger/
+	-rm -f ./migration/sqlbindata.go
 
 CLEAN_TARGETS += clean-vendor
 .PHONY: clean-vendor
@@ -243,7 +262,7 @@ clean: $(CLEAN_TARGETS) ## Runs all clean-* targets.
 # run in dev mode
 # -------------------------------------------------------------------
 .PHONY: dev
-dev: prebuild-check deps generate $(FRESH_BIN) ## run the server locally
+dev: prebuild-check deps generate $(FRESH_BIN) docker-run-local-postgres ## run the server locally
 	F8_DEVELOPER_MODE_ENABLED=true $(FRESH_BIN)
 
 # -------------------------------------------------------------------
@@ -258,9 +277,23 @@ else
 endif
 
 .PHONY: generate
-generate: prebuild-check $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR) ## Generate GOA sources. Only necessary after clean of if changed `design` folder.
+generate: prebuild-check $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR) migration/sqlbindata.go ## Generate GOA sources. Only necessary after clean of if changed `design` folder.
 	$(GOAGEN_BIN) app -d ${PACKAGE_NAME}/${DESIGN_DIR}
 	$(GOAGEN_BIN) controller -d ${PACKAGE_NAME}/${DESIGN_DIR} -o controller/ --pkg controller --app-pkg ${PACKAGE_NAME}/app
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/status --out app
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers --out app
 	$(GOAGEN_BIN) swagger -d ${PACKAGE_NAME}/${DESIGN_DIR}
+
+.PHONY: regenerate
+regenerate: clean-generated generate ## Runs the "clean-generated" and the "generate" target
+
+# -------------------------------------------------------------------
+# build the binary executable (to ship in prod)
+# -------------------------------------------------------------------
+.PHONE: docker-run-local-postgres
+docker-run-local-postgres: docker-clean-postgres
+	docker ps -q --filter "name=postgres" ||
+		docker run --name postgres -e POSTGRESQL_ADMIN_PASSWORD=mysecretpassword -d -p 5432:5432 registry.centos.org/postgresql/postgresql:9.6
+
+docker-clean-postgres:
+	@docker rm -f postgres 2>/dev/null || true

@@ -21,3 +21,6 @@ swagger
 
 # tmp dir
 tmp
+
+# Generate assets
+migration/sqlbindata.go
