@@ -77,7 +77,7 @@ image: clean-artifacts build-linux ## Build the docker image
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check docker-run-local-postgres $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
@@ -292,7 +292,7 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 # -------------------------------------------------------------------
 .PHONE: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres
-	docker ps -q --filter "name=postgres" ||
+	 @[[ "$(docker ps -q --filter "name=postgres")xxx" == xxx ]] && \
 		docker run --name postgres -e POSTGRESQL_ADMIN_PASSWORD=mysecretpassword -d -p 5432:5432 registry.centos.org/postgresql/postgresql:9.6
 
 docker-clean-postgres:

@@ -69,7 +69,13 @@ func main() {
 
 	db := connect(config)
 	defer db.Close()
-	migrate(db)
+
+	err = migration.Migrate(db.DB(), config.GetPostgresDatabase())
+	if err != nil {
+		log.Panic(nil, map[string]interface{}{
+			"err": err,
+		}, "failed migration")
+	}
 
 	// Initialize sentry client
 	haltSentry, err := sentry.InitializeSentryClient(
@@ -183,16 +189,6 @@ func connect(config *configuration.Registry) *gorm.DB {
 		db.DB().SetMaxOpenConns(config.GetPostgresConnectionMaxOpen())
 	}
 	return db
-}
-
-func migrate(db *gorm.DB) {
-	// Migrate the schema
-	err := migration.Migrate(db.DB())
-	if err != nil {
-		log.Panic(nil, map[string]interface{}{
-			"err": err,
-		}, "failed migration")
-	}
 }
 
 func printUserInfo() {

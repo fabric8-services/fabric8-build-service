@@ -3,6 +3,7 @@ package migration
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"database/sql"
 	"net/http"
 	"net/url"
@@ -10,15 +11,15 @@ import (
 	"text/template"
 
 	"github.com/fabric8-services/fabric8-common/log"
+
 	"github.com/goadesign/goa"
 	"github.com/goadesign/goa/client"
 	errs "github.com/pkg/errors"
-	"golang.org/x/net/context"
 )
 
 // AdvisoryLockID is a random number that should be used within the application
 // by anybody who wants to modify the "version" table.
-const AdvisoryLockID = 1
+const AdvisoryLockID = 42
 
 // fn defines the type of function that can be part of a migration steps
 type fn func(tx *sql.Tx) error
@@ -26,8 +27,8 @@ type fn func(tx *sql.Tx) error
 // steps defines a collection of all the functions that make up a version
 type steps []fn
 
-// migrations defines all a collection of all the steps
-type migrations []steps
+// Migrations defines all a collection of all the steps
+type Migrations []steps
 
 // mutex variable to lock/unlock the population of common types
 var populateLocker = &sync.Mutex{}
@@ -35,14 +36,14 @@ var populateLocker = &sync.Mutex{}
 // Migrate executes the required migration of the database on startup.
 // For each successful migration, an entry will be written into the "version"
 // table, that states when a certain version was reached.
-func Migrate(db *sql.DB) error {
-	var err error
+func Migrate(db *sql.DB, catalog string) error {
 
+	var err error
 	if db == nil {
 		return errs.Errorf("Database handle is nil\n")
 	}
 
-	m := getMigrations()
+	m := GetMigrations()
 
 	var tx *sql.Tx
 	for nextVersion := int64(0); nextVersion < int64(len(m)) && err == nil; nextVersion++ {
@@ -52,7 +53,7 @@ func Migrate(db *sql.DB) error {
 			return errs.Errorf("Failed to start transaction: %s\n", err)
 		}
 
-		err = migrateToNextVersion(tx, &nextVersion, m)
+		err = MigrateToNextVersion(tx, &nextVersion, m, catalog)
 
 		if err != nil {
 			oldErr := err
@@ -94,14 +95,14 @@ func Migrate(db *sql.DB) error {
 	return nil
 }
 
-// getMigrations returns the migrations all the migrations we have.
+// GetMigrations returns the migrations all the migrations we have.
 // Add your own migration to the end of this function.
 // IMPORTANT: ALWAYS APPEND AT THE END AND DON'T CHANGE THE ORDER OF MIGRATIONS!
-func getMigrations() migrations {
-	m := migrations{}
+func GetMigrations() Migrations {
+	m := Migrations{}
 
-	m = append(m, steps{executeSQLFile("000-bootstrap.sql")})
-
+	// Version 0
+	m = append(m, steps{ExecuteSQLFile("000-bootstrap.sql")})
 	// Version N
 	//
 	// In order to add an upgrade, simply append an array of MigrationFunc to the
@@ -118,7 +119,7 @@ func getMigrations() migrations {
 				// Execute random go code
 				return nil
 			},
-			executeSQLFile("YOUR_OWN_FILE.sql"),
+			ExecuteSQLFile("YOUR_OWN_FILE.sql"),
 			func(db *sql.Tx) error {
 				// Execute random go code
 				return nil
@@ -129,42 +130,55 @@ func getMigrations() migrations {
 	return m
 }
 
-// executeSQLFile loads the given filename from the packaged SQL files and
+// ExecuteSQLFile loads the given filename from the packaged SQL files and
 // executes it on the given database. Golang text/template module is used
 // to handle all the optional arguments passed to the sql files
-func executeSQLFile(filename string, args ...string) fn {
+func ExecuteSQLFile(filename string, args ...string) fn {
 	return func(db *sql.Tx) error {
 		data, err := Asset(filename)
 		if err != nil {
-			return errs.WithStack(err)
+			return errs.Wrapf(err, "failed to find filename: %s", filename)
 		}
 
 		if len(args) > 0 {
 			tmpl, err := template.New("sql").Parse(string(data))
 			if err != nil {
-				return errs.WithStack(err)
+				return errs.Wrap(err, "failed to parse SQL template")
 			}
 			var sqlScript bytes.Buffer
 			writer := bufio.NewWriter(&sqlScript)
+
 			err = tmpl.Execute(writer, args)
 			if err != nil {
-				return errs.WithStack(err)
+				return errs.Wrap(err, "failed to execute SQL template")
 			}
 			// We need to flush the content of the writer
 			writer.Flush()
+
 			_, err = db.Exec(sqlScript.String())
+			if err != nil {
+				log.Error(context.Background(), map[string]interface{}{
+					"err": err,
+				}, "failed to execute this query: \n\n%s\n\n", sqlScript.String())
+			}
+
 		} else {
 			_, err = db.Exec(string(data))
+			if err != nil {
+				log.Error(context.Background(), map[string]interface{}{
+					"err": err,
+				}, "failed to execute this query: \n\n%s\n\n", string(data))
+			}
 		}
 
 		return errs.WithStack(err)
 	}
 }
 
-// migrateToNextVersion migrates the database to the nextVersion.
+// MigrateToNextVersion migrates the database to the nextVersion.
 // If the database is already at nextVersion or higher, the nextVersion
 // will be set to the actual next version.
-func migrateToNextVersion(tx *sql.Tx, nextVersion *int64, m migrations) error {
+func MigrateToNextVersion(tx *sql.Tx, nextVersion *int64, m Migrations, catalog string) error {
 	// Obtain exclusive transaction level advisory that doesn't depend on any table.
 	// Once obtained, the lock is held for the remainder of the current transaction.
 	// (There is no UNLOCK TABLE command; locks are always released at transaction end.)
@@ -174,7 +188,7 @@ func migrateToNextVersion(tx *sql.Tx, nextVersion *int64, m migrations) error {
 
 	// Determine current version and adjust the outmost loop
 	// iterator variable "version"
-	currentVersion, err := getCurrentVersion(tx)
+	currentVersion, err := getCurrentVersion(tx, catalog)
 	if err != nil {
 		return errs.WithStack(err)
 	}
@@ -218,8 +232,12 @@ func migrateToNextVersion(tx *sql.Tx, nextVersion *int64, m migrations) error {
 // Returning -1 simplifies the logic of the migration process because
 // the next version is always the current version + 1 which results
 // in -1 + 1 = 0 which is exactly what we want as the first version.
-func getCurrentVersion(db *sql.Tx) (int64, error) {
-	row := db.QueryRow("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='version')")
+func getCurrentVersion(db *sql.Tx, catalog string) (int64, error) {
+	query := `SELECT EXISTS(
+				SELECT 1 FROM information_schema.tables
+				WHERE table_catalog=$1
+				AND table_name='version')`
+	row := db.QueryRow(query, catalog)
 
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
@@ -249,10 +267,10 @@ func NewMigrationContext(ctx context.Context) context.Context {
 	params := url.Values{}
 	ctx = goa.NewContext(ctx, nil, req, params)
 	// set a random request ID for the context
-	var req_id string
-	ctx, req_id = client.ContextWithRequestID(ctx)
+	var reqID string
+	ctx, reqID = client.ContextWithRequestID(ctx)
 
-	log.Debug(ctx, nil, "Initialized the migration context with Request ID: %v", req_id)
+	log.Debug(ctx, nil, "Initialized the migration context with Request ID: %v", reqID)
 
 	return ctx
 }
