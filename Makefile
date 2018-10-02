@@ -47,7 +47,7 @@ endef
 # -------------------------------------------------------------------
 BUILD_DIR = bin
 REGISTRY_URI = quay.io
-REGISTRY_NS = ${PROJECT_NAME}
+REGISTRY_NS = fabric8-services
 REGISTRY_IMAGE = ${PROJECT_NAME}
 
 ifeq ($(TARGET),rhel)
