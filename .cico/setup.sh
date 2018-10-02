@@ -71,5 +71,5 @@ function dotest() {
     cd ${REPO_PATH}
 
     make analyze-go-code
-    make unit-test
+    make test-unit
 }
