@@ -9,6 +9,7 @@ SOURCES := $(shell find $(SOURCE_DIR) -path $(SOURCE_DIR)/vendor -prune -o -name
 DESIGN_DIR=design
 DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -prune -o -name '*.go' -print)
 ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
+LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
 # By default reduce the amount of log output from tests
 F8_LOG_LEVEL ?= error
@@ -23,8 +24,8 @@ endif
 
 # This is a fix for a non-existing user in passwd file when running in a docker
 # container and trying to clone repos of dependencies
-GIT_COMMITTER_NAME ?= "user"
-GIT_COMMITTER_EMAIL ?= "user@example.com"
+GIT_COMMITTER_NAME ?= "Chmouel Boudjnah"
+GIT_COMMITTER_EMAIL ?= "chmouel@chmouel.com"
 export GIT_COMMITTER_NAME
 export GIT_COMMITTER_EMAIL
 
@@ -72,11 +73,25 @@ image: clean-artifacts build-linux ## Build the docker image
 	  --build-arg PROJECT_NAME=$(PROJECT_NAME)\
 	  -f $(DOCKERFILE) .
 
+# -------------------------------------------------------------------
+# Unittest
+# -------------------------------------------------------------------
 .PHONY: test-unit
 test-unit: prebuild-check generate $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	AUTH_DEVELOPER_MODE_ENABLED=1 AUTH_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
+
+.PHONY: coverage
+coverage: prebuild-check deps $(SOURCES) $(GOVERAGE_BIN)
+	$(call log-info,"Running coerage: $@")
+	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
+	@goverage -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
+	@go tool cover -func tmp/coverage.out
+
+$(GOVERAGE_BIN): prebuild-check
+	@cd $(VENDOR_DIR)/github.com/haya14busa/goverage && go build
+
 
 # -------------------------------------------------------------------
 # help!
@@ -249,8 +264,6 @@ dev: prebuild-check deps generate $(FRESH_BIN) ## run the server locally
 # -------------------------------------------------------------------
 # build the binary executable (to ship in prod)
 # -------------------------------------------------------------------
-LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
-
 .PHONY: build
 build: prebuild-check deps generate ## Build the server
 ifeq ($(OS),Windows_NT)

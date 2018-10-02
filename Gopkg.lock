@@ -165,6 +165,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/haya14busa/goverage"
+  packages = ["."]
+  revision = "eec3514a20b55dca311300eeb08fe5c8ab9ab781"
+
+[[projects]]
   name = "github.com/howeyc/fsnotify"
   packages = ["."]
   revision = "441bbc86b167f3c1f4786afae9931403b99fdacf"
@@ -385,6 +391,7 @@
   branch = "master"
   name = "golang.org/x/tools"
   packages = [
+    "cover",
     "go/ast/astutil",
     "go/gcexportdata",
     "go/internal/gcimporter",
@@ -401,6 +408,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "904f89955bd80907548bbbac507ab4c7951599d63a171fe0df324fc3a38a6373"
+  inputs-digest = "81e685f039801b36d8f7295269b5c508fb93793339d44ea4f00a3054ca719acb"
   solver-name = "gps-cdcl"
   solver-version = 1
