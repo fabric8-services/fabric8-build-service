@@ -3,6 +3,9 @@
 # Build script for CI builds on CentOS CI
 set -ex
 
+export GOPATH=$HOME/go
+REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build-service
+
 function setup() {
     if [ -f jenkins-env.json ]; then
         eval "$(./env-toolkit load -f jenkins-env.json \
@@ -23,6 +26,9 @@ function setup() {
 
     yum -y install docker make golang git
     service docker start
+
+    mkdir -p $(dirname ${REPO_PATH})
+    cp -a ${HOME}/payload ${REPO_PATH}
 
     echo 'CICO: Build environment created.'
 }
@@ -62,6 +68,8 @@ function deploy() {
 }
 
 function dotest() {
+    cd ${REPO_PATH}
+
     make analyze-go-code
     make unit-test
 }
