@@ -160,9 +160,6 @@ $(VENDOR_DIR): Gopkg.toml
 # -------------------------------------------------------------------
 # Code format/check
 # -------------------------------------------------------------------
-$(GOLANGCI_BIN):
-	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
 GOFORMAT_FILES := $(shell find  . -name '*.go' | grep -vEf .gofmt_exclude)
 
 .PHONY: check-go-format
@@ -178,6 +175,7 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 .PHONY: analyze-go-code
 analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the code.
 	$(info >>--- RESULTS: GOLINT CODE ANALYSIS ---<<)
+	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 	@golangci-lint run --enable=golint --enable=govet \
 	 --enable=gocyclo --enable=goconst --enable=unconvert \
 	 --exclude-use-default=false --skip-dirs 'design/*'
