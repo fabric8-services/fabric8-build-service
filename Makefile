@@ -80,14 +80,18 @@ image: clean-artifacts build-linux ## Build the docker image
 test-unit: prebuild-check docker-run-local-postgres $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
-	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
+	sleep 5  # just so we get the postgres docker starting
+	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
+	F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
 .PHONY: coverage
 coverage: prebuild-check deps $(SOURCES) ## Run coverage
-	$(call log-info,"Running coerage: $@")
+	$(call log-info,"Running coverage: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	@cd $(VENDOR_DIR)/github.com/haya14busa/goverage && go build
-	@./vendor/github.com/haya14busa/goverage/goverage -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
+	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 \
+	F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) F8_RESOURCE_DATABASE=1 \
+	./vendor/github.com/haya14busa/goverage/goverage -v -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
 	@go tool cover -func tmp/coverage.out
 
 # -------------------------------------------------------------------
@@ -174,11 +178,12 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 
 .PHONY: analyze-go-code
 analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the code.
-	$(info >>--- RESULTS: GOLINT CODE ANALYSIS ---<<)
+	$(info >>--- RESULTS: GOLANGCI CODE ANALYSIS ---<<)
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-	@golangci-lint run --enable=golint --enable=govet \
+	@golangci-lint run --out-format=line-number --enable=golint --enable=govet \
 	 --enable=gocyclo --enable=goconst --enable=unconvert \
-	 --exclude-use-default=false --skip-dirs 'design/*'
+	 --exclude-use-default=false --skip-dirs 'design/*' \
+	 --skip-files 'migration/sqlbindata.go' -e '.*which can be annoying to use.*'
 
 .PHONY: format-go-code
 format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style
@@ -293,7 +298,8 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 .PHONE: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres
 	 @[[ "$(docker ps -q --filter "name=postgres")xxx" == xxx ]] && \
-		docker run --name postgres -e POSTGRESQL_ADMIN_PASSWORD=mysecretpassword -d -p 5432:5432 registry.centos.org/postgresql/postgresql:9.6
+		docker run --name postgres -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
+		 -d -p 5432:5432 registry.centos.org/postgresql/postgresql:9.6 >/dev/null
 
 docker-clean-postgres:
 	@docker rm -f postgres 2>/dev/null || true

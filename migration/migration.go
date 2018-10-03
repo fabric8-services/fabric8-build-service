@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"net/http"
 	"net/url"
-	"sync"
 	"text/template"
 
 	"github.com/fabric8-services/fabric8-common/log"
@@ -29,9 +28,6 @@ type steps []fn
 
 // Migrations defines all a collection of all the steps
 type Migrations []steps
-
-// mutex variable to lock/unlock the population of common types
-var populateLocker = &sync.Mutex{}
 
 // Migrate executes the required migration of the database on startup.
 // For each successful migration, an entry will be written into the "version"
@@ -57,14 +53,14 @@ func Migrate(db *sql.DB, catalog string) error {
 
 		if err != nil {
 			oldErr := err
-			log.Info(nil, map[string]interface{}{
+			log.Info(context.TODO(), map[string]interface{}{
 				"next_version": nextVersion,
 				"migrations":   m,
 				"err":          err,
 			}, "Rolling back transaction due to: %v", err)
 
 			if err = tx.Rollback(); err != nil {
-				log.Error(nil, map[string]interface{}{
+				log.Error(context.TODO(), map[string]interface{}{
 					"next_version": nextVersion,
 					"migrations":   m,
 					"err":          err,
@@ -75,7 +71,7 @@ func Migrate(db *sql.DB, catalog string) error {
 		}
 
 		if err = tx.Commit(); err != nil {
-			log.Error(nil, map[string]interface{}{
+			log.Error(context.TODO(), map[string]interface{}{
 				"migrations": m,
 				"err":        err,
 			}, "error during transaction commit: %v", err)
@@ -85,7 +81,7 @@ func Migrate(db *sql.DB, catalog string) error {
 	}
 
 	if err != nil {
-		log.Error(nil, map[string]interface{}{
+		log.Error(context.TODO(), map[string]interface{}{
 			"migrations": m,
 			"err":        err,
 		}, "migration failed with error: %v", err)
@@ -153,7 +149,10 @@ func ExecuteSQLFile(filename string, args ...string) fn {
 				return errs.Wrap(err, "failed to execute SQL template")
 			}
 			// We need to flush the content of the writer
-			writer.Flush()
+			err = writer.Flush()
+			if err != nil {
+				return errs.Wrap(err, "failed to flush writer")
+			}
 
 			_, err = db.Exec(sqlScript.String())
 			if err != nil {
@@ -195,14 +194,14 @@ func MigrateToNextVersion(tx *sql.Tx, nextVersion *int64, m Migrations, catalog 
 	*nextVersion = currentVersion + 1
 	if *nextVersion >= int64(len(m)) {
 		// No further updates to apply (this is NOT an error)
-		log.Info(nil, map[string]interface{}{
+		log.Info(context.TODO(), map[string]interface{}{
 			"next_version":    *nextVersion,
 			"current_version": currentVersion,
 		}, "Current version %d. Nothing to update.", currentVersion)
 		return nil
 	}
 
-	log.Info(nil, map[string]interface{}{
+	log.Info(context.TODO(), map[string]interface{}{
 		"next_version":    *nextVersion,
 		"current_version": currentVersion,
 	}, "Attempt to update DB to version %v", *nextVersion)
@@ -218,7 +217,7 @@ func MigrateToNextVersion(tx *sql.Tx, nextVersion *int64, m Migrations, catalog 
 		return errs.Errorf("Failed to update DB to version %d: %s\n", *nextVersion, err)
 	}
 
-	log.Info(nil, map[string]interface{}{
+	log.Info(context.TODO(), map[string]interface{}{
 		"next_version":    *nextVersion,
 		"current_version": currentVersion,
 	}, "Successfully updated DB to version %v", *nextVersion)

@@ -68,11 +68,18 @@ func main() {
 	log.InitializeLogger(config.IsLogJSON(), config.GetLogLevel())
 
 	db := connect(config)
-	defer db.Close()
+	defer func() {
+		err = db.Close()
+		if err != nil {
+			log.Panic(context.TODO(), map[string]interface{}{
+				"err": err,
+			}, "failure to close db connexion")
+		}
+	}()
 
 	err = migration.Migrate(db.DB(), config.GetPostgresDatabase())
 	if err != nil {
-		log.Panic(nil, map[string]interface{}{
+		log.Panic(context.TODO(), map[string]interface{}{
 			"err": err,
 		}, "failed migration")
 	}
