@@ -26,6 +26,7 @@
 
 
 required = [
+  "github.com/fabric8-services/fabric8-common/errors", # needed by goa generator
   "github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers", # needed by goa generator
   "github.com/fabric8-services/fabric8-common/goasupport/status", # needed by goa generator
   "github.com/goadesign/goa/cors",
@@ -53,3 +54,7 @@ ignored = [
   name = "github.com/fabric8-services/fabric8-common"
   source = "https://github.com/fabric8-services/fabric8-common.git"
   branch = "master"
+
+[prune]
+  go-tests = true
+  unused-packages = true

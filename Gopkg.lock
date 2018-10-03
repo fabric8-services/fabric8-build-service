@@ -54,6 +54,7 @@
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
+    "errors",
     "goasupport/jsonapi_errors_helpers",
     "goasupport/status",
     "log",
@@ -417,6 +418,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "adf744b57b55f1955795e63debf36a7d0d37568b99ea3559f88641866f8a39dd"
+  inputs-digest = "60d1b5c8c19ba166e8fb3e9fc840019e65fdb5190bcd4b49e6580aa7be94be8f"
   solver-name = "gps-cdcl"
   solver-version = 1
