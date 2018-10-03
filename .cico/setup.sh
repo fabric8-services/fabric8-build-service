@@ -70,8 +70,10 @@ function deploy() {
 function dotest() {
     cd ${REPO_PATH}
 
-    make analyze-go-code
+    make build
     make test-unit
+
+    make analyze-go-code
     make coverage
 
     # Upload to codecov
