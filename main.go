@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/fabric8-services/fabric8-build-service/app"
+	"github.com/fabric8-services/fabric8-build-service/configuration"
 	"github.com/fabric8-services/fabric8-build-service/controller"
 	"github.com/fabric8-services/fabric8-build-service/migration"
-	"github.com/fabric8-services/fabric8-common/configuration"
 	"github.com/fabric8-services/fabric8-common/log"
 	"github.com/fabric8-services/fabric8-common/metric"
 	"github.com/fabric8-services/fabric8-common/sentry"
@@ -169,7 +169,7 @@ func main() {
 
 }
 
-func connect(config *configuration.Registry) *gorm.DB {
+func connect(config *configuration.Config) *gorm.DB {
 	var err error
 	var db *gorm.DB
 	for {

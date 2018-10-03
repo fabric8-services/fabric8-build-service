@@ -50,20 +50,19 @@
   version = "v5.0.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
-    "errors",
     "goasupport/jsonapi_errors_helpers",
     "goasupport/status",
-    "httpsupport",
     "log",
     "metric",
     "resource",
     "sentry"
   ]
-  revision = "fc46960"
-  source = "https://github.com/xcoulon/fabric8-common.git"
+  revision = "13443074c10b54b60327441aa49dc321d5cac6b8"
+  source = "https://github.com/fabric8-services/fabric8-common.git"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -418,6 +417,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "66354ee675a2bf1a1232fa4f25ec41e7d4427e76bb3ca11dec4677b2a0c60cee"
+  inputs-digest = "027ccb1448862e996fa9fd0fa4b48c994c562f30352644bf74e00d24cf2b3d5d"
   solver-name = "gps-cdcl"
   solver-version = 1

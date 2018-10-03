@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 
-	config "github.com/fabric8-services/fabric8-common/configuration"
+	config "github.com/fabric8-services/fabric8-build-service/configuration"
 )
 
 // fail - as t.Fatalf() is not goroutine safe, this function behaves like t.Fatalf().
