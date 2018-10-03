@@ -4,6 +4,7 @@
 set -ex
 
 export GOPATH=$HOME/go
+export PATH=$PATH:$GOPATH/bin
 REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build-service
 
 function setup() {
