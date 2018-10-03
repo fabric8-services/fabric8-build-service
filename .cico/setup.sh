@@ -74,5 +74,5 @@ function dotest() {
     make coverage
 
     # Upload to codecov
-    bash <(curl -s https://codecov.io/bash) -X search -f tmp/coverage.out -t 533b56c6-9fec-4ff2-9756-6aea46d46f2b
+    bash <(curl -s https://codecov.io/bash) -K -X search -f tmp/coverage.out -t 533b56c6-9fec-4ff2-9756-6aea46d46f2b
 }
