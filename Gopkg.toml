@@ -40,8 +40,6 @@ required = [
   "github.com/goadesign/goa/goagen/utils",
   "github.com/goadesign/goa/goatest",
   "github.com/davecgh/go-spew/spew",
-  "github.com/golang/lint/golint",
-  "github.com/fzipp/gocyclo",
   "github.com/haya14busa/goverage",
   "github.com/pilu/fresh", # used to rebuild if source changed while running
 ]

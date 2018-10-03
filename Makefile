@@ -160,10 +160,8 @@ $(VENDOR_DIR): Gopkg.toml
 # -------------------------------------------------------------------
 # Code format/check
 # -------------------------------------------------------------------
-$(GOLINT_BIN):
-	cd $(VENDOR_DIR)/github.com/golang/lint/golint && go build -v
-$(GOCYCLO_BIN):
-	cd $(VENDOR_DIR)/github.com/fzipp/gocyclo && go build -v
+$(GOLANGCI_BIN):
+	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 GOFORMAT_FILES := $(shell find  . -name '*.go' | grep -vEf .gofmt_exclude)
 
@@ -178,19 +176,11 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 	|| true
 
 .PHONY: analyze-go-code
-analyze-go-code: deps golint gocyclo govet ## Run a complete static code analysis using the following tools: golint, gocyclo and go-vet.
-
-golint: $(GOLINT_BIN) ## Run gocyclo analysis over the code.
+analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the code.
 	$(info >>--- RESULTS: GOLINT CODE ANALYSIS ---<<)
-	@$(foreach d,$(GOANALYSIS_DIRS),$(GOLINT_BIN) $d 2>&1 | grep -vEf .golint_exclude || true;)
-
-gocyclo: $(GOCYCLO_BIN) ## Run gocyclo analysis over the code.
-	$(info >>--- RESULTS: GOCYCLO CODE ANALYSIS ---<<)
-	@$(foreach d,$(GOANALYSIS_DIRS),$(GOCYCLO_BIN) -over 10 $d | grep -vEf .golint_exclude || true;)
-
-govet: ## Run go vet analysis over the code.
-	$(info >>--- RESULTS: GO VET CODE ANALYSIS ---<<)
-	@$(foreach d,$(GOANALYSIS_DIRS),go tool vet --all $d/*.go 2>&1;)
+	@golangci-lint run --enable=golint --enable=govet \
+	 --enable=gocyclo --enable=goconst --enable=unconvert \
+	 --exclude-use-default=false --skip-dirs 'design/*'
 
 .PHONY: format-go-code
 format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"os"
@@ -49,7 +50,7 @@ func main() {
 
 	config, err := configuration.New(configFilePath)
 	if err != nil {
-		log.Panic(nil, map[string]interface{}{
+		log.Panic(context.TODO(), map[string]interface{}{
 			"config_file_path": configFilePath,
 			"err":              err,
 		}, "failed to setup the configuration")
@@ -69,7 +70,7 @@ func main() {
 		sentry.WithEnvironment(config.GetEnvironment()),
 	)
 	if err != nil {
-		log.Panic(nil, map[string]interface{}{
+		log.Panic(context.TODO(), map[string]interface{}{
 			"err": err,
 		}, "failed to setup the sentry client")
 	}
@@ -112,7 +113,7 @@ func main() {
 		log.Logger().Infoln("Diagnose:       ", config.GetDiagnoseHTTPAddress())
 		// Start diagnostic http
 		if err := agent.Listen(agent.Options{Addr: config.GetDiagnoseHTTPAddress(), ConfigDir: "/tmp/gops/"}); err != nil {
-			log.Error(nil, map[string]interface{}{
+			log.Error(context.TODO(), map[string]interface{}{
 				"addr": config.GetDiagnoseHTTPAddress(),
 				"err":  err,
 			}, "unable to connect to diagnose server")
@@ -127,7 +128,7 @@ func main() {
 			mx := http.NewServeMux()
 			mx.Handle("/metrics", promhttp.Handler())
 			if err := http.ListenAndServe(metricAddress, mx); err != nil {
-				log.Error(nil, map[string]interface{}{
+				log.Error(context.TODO(), map[string]interface{}{
 					"addr": metricAddress,
 					"err":  err,
 				}, "unable to connect to metrics server")
@@ -138,7 +139,7 @@ func main() {
 
 	// Start http
 	if err := http.ListenAndServe(config.GetHTTPAddress(), nil); err != nil {
-		log.Error(nil, map[string]interface{}{
+		log.Error(context.TODO(), map[string]interface{}{
 			"addr": config.GetHTTPAddress(),
 			"err":  err,
 		}, "unable to connect to server")
@@ -150,21 +151,21 @@ func main() {
 func printUserInfo() {
 	u, err := user.Current()
 	if err != nil {
-		log.Warn(nil, map[string]interface{}{
+		log.Warn(context.TODO(), map[string]interface{}{
 			"err": err,
 		}, "failed to get current user")
 	} else {
-		log.Info(nil, map[string]interface{}{
+		log.Info(context.TODO(), map[string]interface{}{
 			"username": u.Username,
 			"uuid":     u.Uid,
 		}, "Running as user name '%s' with UID %s.", u.Username, u.Uid)
 		g, err := user.LookupGroupId(u.Gid)
 		if err != nil {
-			log.Warn(nil, map[string]interface{}{
+			log.Warn(context.TODO(), map[string]interface{}{
 				"err": err,
 			}, "failed to lookup group")
 		} else {
-			log.Info(nil, map[string]interface{}{
+			log.Info(context.TODO(), map[string]interface{}{
 				"groupname": g.Name,
 				"gid":       g.Gid,
 			}, "Running as as group '%s' with GID %s.", g.Name, g.Gid)

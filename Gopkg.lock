@@ -71,12 +71,6 @@
   version = "v1.4.7"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/fzipp/gocyclo"
-  packages = ["."]
-  revision = "6acd4345c835499920e8426c7e4e8d7a34f1bb83"
-
-[[projects]]
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   revision = "master"
@@ -112,12 +106,6 @@
   ]
   revision = "5646a430cdeb66983d5ace3384e0a667c185abc7"
   version = "v1.3.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golang/lint"
-  packages = ["golint"]
-  revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -358,12 +346,6 @@
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/lint"
-  packages = ["."]
-  revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/net"
   packages = ["websocket"]
   revision = "4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de"
@@ -392,10 +374,7 @@
   name = "golang.org/x/tools"
   packages = [
     "cover",
-    "go/ast/astutil",
-    "go/gcexportdata",
-    "go/internal/gcimporter",
-    "go/types/typeutil"
+    "go/ast/astutil"
   ]
   revision = "1be7b45b4c8359a408756f1a626897c173a5be94"
 
@@ -408,6 +387,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "81e685f039801b36d8f7295269b5c508fb93793339d44ea4f00a3054ca719acb"
+  inputs-digest = "66723be17b92d2bdbef4668f3df291d11ebcf2845b205377431adf92d5ae158f"
   solver-name = "gps-cdcl"
   solver-version = 1
