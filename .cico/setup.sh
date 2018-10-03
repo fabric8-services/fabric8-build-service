@@ -37,7 +37,7 @@ function tag_push() {
     local image="$1"
     local tag="$2"
 
-    docker tag ${image} ${tag}
+    docker tag ${image}:${tag}
     docker push ${image}:${tag}
 }
 
