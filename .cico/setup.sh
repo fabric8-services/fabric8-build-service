@@ -55,7 +55,6 @@ function deploy() {
   make image
 
   TAG=$(echo $GIT_COMMIT | cut -c1-${DEVSHIFT_TAG_LEN})
-
   if [ "$TARGET" = "rhel" ]; then
     tag_push ${REGISTRY}/openshiftio/rhel-fabric8-services-fabric8-build-service $TAG
     tag_push ${REGISTRY}/openshiftio/rhel-fabric8-services-fabric8-build-service latest
