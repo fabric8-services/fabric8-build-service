@@ -7,6 +7,4 @@ source .cico/setup.sh
 
 setup
 
-dotest
-
 deploy
