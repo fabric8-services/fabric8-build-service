@@ -1,26 +1,83 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
+### Intellij ###
+.idea/
+*.iws
+*.iml
+/out/
+.idea_modules/
+atlassian-ide-plugin.xml
+
+### Eclipse ###
+.metadata
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# Eclipse Core
+.project
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# Code Recommenders
+.recommenders/
+
+
+### VisualStudioCode ###
+.vscode
+
+### Go ###
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
 *.so
-*.dylib
-bin
 
-# Test binary, build with `go test -c`
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+_testmain.go
+
+*.exe
 *.test
+*.prof
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Auth specific artifacts
+/debug
+**/debug.test
 
-# vendored deps are not kept in git
-vendor
+# Auth binaries
+bin/
 
-# generate goa code
-app
-swagger
+# Glide package manager
+.glide
+vendor/
 
-# tmp dir
-tmp
-
-# Generate assets
+# Generated assets
+app/
+assets/js/
+bindata_assetfs.go
+client/
+swagger/
+tool/
 migration/sqlbindata.go
+environment/generated/
+auth/client

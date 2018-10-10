@@ -11,6 +11,10 @@ DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -
 ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
+# Postgres Container
+POSTGRES_CONTAINER_NAME = db-build
+POSTGRES_CONTAINER_PORT = 5433
+
 # By default reduce the amount of log output from tests
 F8_LOG_LEVEL ?= error
 
@@ -81,6 +85,7 @@ test-unit: prebuild-check docker-run-local-postgres $(SOURCES) ## Runs the unit 
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	sleep 5  # just so we get the postgres docker starting
+	F8_POSTGRES_PORT="$(POSTGRES_CONTAINER_PORT)" \
 	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
@@ -89,6 +94,7 @@ coverage: prebuild-check deps $(SOURCES) ## Run coverage
 	$(call log-info,"Running coverage: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	@cd $(VENDOR_DIR)/github.com/haya14busa/goverage && go build
+	F8_POSTGRES_PORT=$(POSTGRES_CONTAINER_PORT) && \
 	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) F8_RESOURCE_DATABASE=1 \
 	./vendor/github.com/haya14busa/goverage/goverage -v -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
@@ -237,6 +243,7 @@ clean-generated:
 	-rm -rf ./app
 	-rm -rf ./swagger/
 	-rm -f ./migration/sqlbindata.go
+	-rm -rf ./auth/client
 
 CLEAN_TARGETS += clean-vendor
 .PHONY: clean-vendor
@@ -301,9 +308,12 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 # -------------------------------------------------------------------
 .PHONE: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres
-	 @[[ "$(docker ps -q --filter "name=postgres")xxx" == xxx ]] && \
-		docker run --name postgres -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
-		 -d -p 5432:5432 registry.centos.org/postgresql/postgresql:9.6 >/dev/null
+	$(info >>--- Starting container $(POSTGRES_CONTAINER_NAME) ---<<)
+	 @[[ "$(docker ps -q --filter "name=$(POSTGRES_CONTAINER_NAME)")xxx" == xxx ]] && \
+		docker run --name $(POSTGRES_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
+		 -d -p $(POSTGRES_CONTAINER_PORT):5432 registry.centos.org/postgresql/postgresql:9.6 >/dev/null
 
 docker-clean-postgres:
-	@docker rm -f postgres 2>/dev/null || true
+	$(info >>--- Stopping container $(POSTGRES_CONTAINER_NAME) ---<<)
+	@docker stop $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
+	@docker rm -f $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
