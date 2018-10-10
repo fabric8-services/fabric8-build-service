@@ -50,7 +50,7 @@
   version = "v5.0.1"
 
 [[projects]]
-  branch = "master"
+  branch = "allow-override-viperconfig"
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
@@ -62,8 +62,8 @@
     "resource",
     "sentry"
   ]
-  revision = "13443074c10b54b60327441aa49dc321d5cac6b8"
-  source = "https://github.com/fabric8-services/fabric8-common.git"
+  revision = "09483d7a1c131983ebf8506b0d3332c28b9b1c4a"
+  source = "https://github.com/chmouel/fabric8-common"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -74,7 +74,7 @@
 [[projects]]
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "master"
+  revision = "084a9de9eb0361fbd5ded14b55c84e5493a5d7f6"
 
 [[projects]]
   name = "github.com/goadesign/goa"
@@ -418,6 +418,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "60d1b5c8c19ba166e8fb3e9fc840019e65fdb5190bcd4b49e6580aa7be94be8f"
+  inputs-digest = "de8b639c309f06935ba809526eca417e52e174f55671e9d2ee32ef14f905ea48"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -71,6 +71,9 @@ func (c *Config) setConfigDefaults() {
 	// Number of seconds to wait before trying to connect again
 	c.v.SetDefault(varPostgresConnectionRetrySleep, time.Second)
 
+	// Set our viper config
+	c.SetViperConfig(c.v)
+
 	// Timeout of a transaction in minutes
 	c.v.SetDefault(varPostgresTransactionTimeout, 5*time.Minute)
 }
