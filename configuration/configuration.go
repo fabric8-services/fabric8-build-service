@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -55,11 +56,22 @@ func New(configFilePath string) (*Config, error) {
 	return &c, nil
 }
 
-// Registry encapsulates the Viper configuration registry which stores the
+// Config encapsulates the Viper configuration registry which stores the
 // configuration data in-memory.
-
 type Config struct {
 	v *viper.Viper
+}
+
+// GetConfig is a wrapper over NewConfigurationData which reads configuration file path
+// from the environment variable.
+func GetConfig() (*Config, error) {
+	return New(getMainConfigFile())
+}
+
+func getMainConfigFile() string {
+	// This was either passed as a env var or set inside main.go from --config
+	envConfigPath, _ := os.LookupEnv("BUILD_CONFIG_FILE_PATH")
+	return envConfigPath
 }
 
 func (c *Config) setConfigDefaults() {

@@ -51,6 +51,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/fabric8-services/fabric8-auth"
+  packages = ["resource"]
+  revision = "9af23465f289dd7a3f9ffc4c6df7a4c0469617da"
+
+[[projects]]
+  branch = "master"
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
@@ -417,6 +423,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "157db653306627304da13768f4b5221c65a5dc556aa5a4d15d42d0aadbe5e52b"
+  inputs-digest = "32b8079fe150084ce17611bf0b8700bee82d65ac5e682df972b2307a4dc0a242"
   solver-name = "gps-cdcl"
   solver-version = 1
