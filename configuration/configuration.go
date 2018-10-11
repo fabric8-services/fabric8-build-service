@@ -5,12 +5,20 @@ import (
 	"strings"
 	"time"
 
-	commonconfig "github.com/fabric8-services/fabric8-common/configuration"
 	errs "github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
 const (
+	varLogJSON              = "log.json"
+	varLogLevel             = "log.level"
+	varDeveloperModeEnabled = "developer.mode.enabled"
+	varEnvironment          = "environment"
+	varHTTPAddress          = "http.address"
+	varMetricsHTTPAddress   = "metrics.http.address"
+	varDiagnoseHTTPAddress  = "diagnose.http.address"
+	defaultLogLevel         = "info"
+
 	varPostgresHost                 = "postgres.host"
 	varPostgresPort                 = "postgres.port"
 	varPostgresUser                 = "postgres.user"
@@ -47,18 +55,24 @@ func New(configFilePath string) (*Config, error) {
 	return &c, nil
 }
 
-// Config extends fabric8-common Viper configuration which stores the
+// Registry encapsulates the Viper configuration registry which stores the
 // configuration data in-memory.
+
 type Config struct {
-	commonconfig.Registry
 	v *viper.Viper
 }
 
 func (c *Config) setConfigDefaults() {
+	c.v.SetTypeByDefaultValue(true)
+
+	c.v.SetDefault(varDeveloperModeEnabled, false)
+	c.v.SetDefault(varLogLevel, defaultLogLevel)
+	c.v.SetDefault(varHTTPAddress, "0.0.0.0:8080")
+	c.v.SetDefault(varMetricsHTTPAddress, "0.0.0.0:8080")
+
 	//---------
 	// Postgres
 	//---------
-	c.v.SetTypeByDefaultValue(true)
 	c.v.SetDefault(varPostgresHost, "localhost")
 	c.v.SetDefault(varPostgresPort, 5432)
 	c.v.SetDefault(varPostgresUser, "postgres")
@@ -71,11 +85,64 @@ func (c *Config) setConfigDefaults() {
 	// Number of seconds to wait before trying to connect again
 	c.v.SetDefault(varPostgresConnectionRetrySleep, time.Second)
 
-	// Set our viper config
-	c.SetViperConfig(c.v)
-
 	// Timeout of a transaction in minutes
 	c.v.SetDefault(varPostgresTransactionTimeout, 5*time.Minute)
+}
+
+// DeveloperModeEnabled returns `true` if development related features (as set via default, config file, or environment variable),
+// e.g. token generation endpoint are enabled
+func (c *Config) DeveloperModeEnabled() bool {
+	return c.v.GetBool(varDeveloperModeEnabled)
+}
+
+// GetEnvironment returns the current environment application is deployed in
+// like 'production', 'prod-preview', 'local', etc as the value of environment variable
+// `F8_ENVIRONMENT` is set.
+func (c *Config) GetEnvironment() string {
+	if c.v.IsSet(varEnvironment) {
+		return c.v.GetString(varEnvironment)
+	}
+	return "local"
+}
+
+// IsLogJSON returns if we should log json format (as set via config file or environment variable)
+func (c *Config) IsLogJSON() bool {
+	if c.v.IsSet(varLogJSON) {
+		return c.v.GetBool(varLogJSON)
+	}
+	if c.DeveloperModeEnabled() {
+		return false
+	}
+	return true
+}
+
+// GetHTTPAddress returns the HTTP address (as set via default, config file, or environment variable)
+// that the wit server binds to (e.g. "0.0.0.0:8080")
+func (c *Config) GetHTTPAddress() string {
+	return c.v.GetString(varHTTPAddress)
+}
+
+// GetMetricsHTTPAddress returns the address the /metrics endpoing will be mounted.
+// By default GetMetricsHTTPAddress is the same as GetHTTPAddress
+func (c *Config) GetMetricsHTTPAddress() string {
+	return c.v.GetString(varMetricsHTTPAddress)
+}
+
+// GetDiagnoseHTTPAddress returns the address of where to start the gops handler.
+// By default GetDiagnoseHTTPAddress is 127.0.0.1:0 in devMode, but turned off in prod mode
+// unless explicitly configured
+func (c *Config) GetDiagnoseHTTPAddress() string {
+	if c.v.IsSet(varDiagnoseHTTPAddress) {
+		return c.v.GetString(varDiagnoseHTTPAddress)
+	} else if c.DeveloperModeEnabled() {
+		return "127.0.0.1:0"
+	}
+	return ""
+}
+
+// GetLogLevel returns the loggging level (as set via config file or environment variable)
+func (c *Config) GetLogLevel() string {
+	return c.v.GetString(varLogLevel)
 }
 
 // GetPostgresHost returns the postgres host as set via default, config file, or environment variable

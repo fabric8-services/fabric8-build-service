@@ -50,7 +50,7 @@
   version = "v5.0.1"
 
 [[projects]]
-  branch = "allow-override-viperconfig"
+  branch = "master"
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
@@ -62,8 +62,7 @@
     "resource",
     "sentry"
   ]
-  revision = "09483d7a1c131983ebf8506b0d3332c28b9b1c4a"
-  source = "https://github.com/chmouel/fabric8-common"
+  revision = "51e44b47e514721ddaa3fca99e5fb5bc1a6e7eb2"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -418,6 +417,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "de8b639c309f06935ba809526eca417e52e174f55671e9d2ee32ef14f905ea48"
+  inputs-digest = "157db653306627304da13768f4b5221c65a5dc556aa5a4d15d42d0aadbe5e52b"
   solver-name = "gps-cdcl"
   solver-version = 1
