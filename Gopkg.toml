@@ -59,12 +59,3 @@ ignored = [
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.2.1"
-
-[[constraint]]
-  name = "github.com/fabric8-services/fabric8-common"
-  source = "https://github.com/fabric8-services/fabric8-common.git"
-  branch = "master"
-
-[[constraint]]
-  name = "github.com/fabric8-services/fabric8-auth"
-  revision = "19eb16aaf10758299c4a5360600af983b8470909"

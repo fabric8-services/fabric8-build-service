@@ -84,7 +84,6 @@
     "sentry"
   ]
   revision = "51e44b47e514721ddaa3fca99e5fb5bc1a6e7eb2"
-  source = "https://github.com/fabric8-services/fabric8-common.git"
 
 [[projects]]
   branch = "master"
@@ -490,6 +489,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cd49f69df16f5fad09310db7e41f0f1f3df8c390ff6eae1048081e6b5e8eaf54"
+  inputs-digest = "ff026d894509f474ce8cbc29f85be8239272b0559e5f16f09930f76e46514310"
   solver-name = "gps-cdcl"
   solver-version = 1
