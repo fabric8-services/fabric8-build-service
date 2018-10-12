@@ -281,7 +281,7 @@ dev: prebuild-check deps generate $(FRESH_BIN) docker-run-local-postgres ## run 
 # build the binary executable (to ship in prod)
 # -------------------------------------------------------------------
 .PHONY: build
-build: prebuild-check deps generate ## Build the server
+build: prebuild-check deps ## Build the server
 ifeq ($(OS),Windows_NT)
 	go build -v $(LDFLAGS) -o "$(shell cygpath --windows '$(BINARY_SERVER_BIN)')"
 else

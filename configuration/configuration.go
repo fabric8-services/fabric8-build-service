@@ -107,8 +107,8 @@ func (c *Config) setConfigDefaults() {
 
 	// Auth
 	c.v.SetDefault(varAuthURL, "http://localhost:8089")
-	c.v.SetDefault(varAuthClientID, "c211f1bd-17a7-4f8c-9f80-0917d167889d")
-	c.v.SetDefault(varClientSecret, "buildsecretNew")
+	c.v.SetDefault(varAuthClientID, "341c283f-0cd7-48a8-9281-4583aceb3617") // TODO: This is using idler creds, add this service example to auth
+	c.v.SetDefault(varClientSecret, "secret")
 }
 
 // DeveloperModeEnabled returns `true` if development related features (as set via default, config file, or environment variable),

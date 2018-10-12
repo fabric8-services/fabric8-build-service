@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/user"
@@ -102,7 +101,7 @@ func main() {
 			"target": config.GetAuthURL(),
 		}, "failed to fetch public keys from token service")
 	}
-	fmt.Println(publicKeys)
+
 	// Initialize sentry client
 	haltSentry, err := sentry.InitializeSentryClient(
 		nil, // will use the `os.Getenv("Sentry_DSN")` instead
