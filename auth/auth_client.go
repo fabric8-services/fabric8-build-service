@@ -31,7 +31,7 @@ func newClient(authURL, token string, options ...configuration.HTTPClientOption)
 	})
 	client.Host = u.Host
 	client.Scheme = u.Scheme
-	log.Debug(nil, map[string]interface{}{"host": client.Host, "scheme": client.Scheme}, "initializing auth client")
+	log.Debug(context.TODO(), map[string]interface{}{"host": client.Host, "scheme": client.Scheme}, "initializing auth client")
 	return client, nil
 }
 

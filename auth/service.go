@@ -23,6 +23,7 @@ import (
 	"gopkg.in/square/go-jose.v2"
 )
 
+// Service contains service struct information with ClientOptions and SaToken
 type Service struct {
 	Config        *configuration.Config
 	ClientOptions []configuration.HTTPClientOption
@@ -134,8 +135,14 @@ func (s *Service) getOAuthToken(ctx context.Context) (*string, error) {
 		return nil, errors.Wrapf(err, "error while doing the request")
 	}
 	defer func() {
-		ioutil.ReadAll(res.Body)
-		res.Body.Close()
+		_, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return
+		}
+		err = res.Body.Close()
+		if err != nil {
+			return
+		}
 	}()
 
 	validationerror := ValidateResponse(ctx, client, res)
@@ -186,8 +193,14 @@ func (s *Service) ResolveTargetToken(ctx context.Context, target, token string, 
 		return "", "", errors.Wrapf(err, "error while resolving the token for %s", target)
 	}
 	defer func() {
-		ioutil.ReadAll(res.Body)
-		res.Body.Close()
+		_, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return
+		}
+		err = res.Body.Close()
+		if err != nil {
+			return
+		}
 	}()
 
 	err = ValidateResponse(ctx, client, res)
@@ -207,6 +220,7 @@ func (s *Service) ResolveTargetToken(ctx context.Context, target, token string, 
 	return externalToken.Username, t, err
 }
 
+// GetAuthUserData Get user data for this auth
 func (s *Service) GetAuthUserData(ctx context.Context, userToken *jwt.Token) (*authclient.UserDataAttributes, error) {
 	client, err := s.NewSaClient()
 	if err != nil {
@@ -219,8 +233,14 @@ func (s *Service) GetAuthUserData(ctx context.Context, userToken *jwt.Token) (*a
 		return nil, errors.Wrapf(err, "error while doing the request")
 	}
 	defer func() {
-		ioutil.ReadAll(res.Body)
-		res.Body.Close()
+		_, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return
+		}
+		err = res.Body.Close()
+		if err != nil {
+			return
+		}
 	}()
 
 	validationerror := ValidateResponse(ctx, client, res)
@@ -255,6 +275,7 @@ func (s *Service) GetPublicKeys() ([]*rsa.PublicKey, error) {
 		}, "unable to get public keys from the auth service")
 		return nil, errs.Wrap(err, "unable to get public keys from the auth service")
 	}
+	// nolint
 	defer res.Body.Close()
 	bodyString := rest.ReadBody(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -267,7 +288,7 @@ func (s *Service) GetPublicKeys() ([]*rsa.PublicKey, error) {
 	if err != nil {
 		return nil, errs.Wrapf(err, "unable to load keys from auth service")
 	}
-	log.Info(nil, map[string]interface{}{
+	log.Info(context.TODO(), map[string]interface{}{
 		"url":            authclient.KeysTokenPath(),
 		"number_of_keys": len(keys),
 	}, "Public keys loaded")
@@ -311,8 +332,7 @@ func unmarshalKeys(jsonData []byte) ([]*PublicKey, error) {
 }
 
 func unmarshalKey(jsonData []byte) (*PublicKey, error) {
-	var key *jose.JSONWebKey
-	key = &jose.JSONWebKey{}
+	key := &jose.JSONWebKey{}
 	err := key.UnmarshalJSON(jsonData)
 	if err != nil {
 		return nil, err
@@ -321,7 +341,7 @@ func unmarshalKey(jsonData []byte) (*PublicKey, error) {
 	if !ok {
 		return nil, errs.New("Key is not an *rsa.PublicKey")
 	}
-	log.Info(nil, map[string]interface{}{"key_id": key.KeyID}, "unmarshalled public key")
+	log.Info(context.TODO(), map[string]interface{}{"key_id": key.KeyID}, "unmarshalled public key")
 	return &PublicKey{
 			KeyID: key.KeyID,
 			Key:   rsaKey},
