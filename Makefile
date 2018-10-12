@@ -12,8 +12,17 @@ ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
 # Postgres Container
-POSTGRES_CONTAINER_NAME = db-build
-POSTGRES_CONTAINER_PORT = 5433
+DB_CONTAINER_NAME = db-build
+DB_CONTAINER_PORT = 5433
+DB_CONTAINER_IMAGE = registry.centos.org/postgresql/postgresql:9.6
+
+AUTH_DB_CONTAINER_NAME = db-auth
+AUTH_DB_CONTAINER_PORT = 5434
+AUTH_DB_CONTAINER_IMAGE = $(DB_CONTAINER_IMAGE)
+
+AUTH_CONTAINER_NAME = auth
+AUTH_CONTAINER_PORT = 8089
+AUTH_CONTAINER_IMAGE = quay.io/openshiftio/fabric8-services-fabric8-auth:latest
 
 # By default reduce the amount of log output from tests
 F8_LOG_LEVEL ?= error
@@ -85,7 +94,7 @@ test-unit: prebuild-check docker-run-local-postgres $(SOURCES) ## Runs the unit 
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	sleep 5  # just so we get the postgres docker starting
-	F8_POSTGRES_PORT="$(POSTGRES_CONTAINER_PORT)" \
+	F8_POSTGRES_PORT="$(DB_CONTAINER_PORT)" \
 	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
@@ -94,7 +103,7 @@ coverage: prebuild-check deps $(SOURCES) ## Run coverage
 	$(call log-info,"Running coverage: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	@cd $(VENDOR_DIR)/github.com/haya14busa/goverage && go build
-	F8_POSTGRES_PORT=$(POSTGRES_CONTAINER_PORT) && \
+	F8_POSTGRES_PORT=$(DB_CONTAINER_PORT) && \
 	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) F8_RESOURCE_DATABASE=1 \
 	./vendor/github.com/haya14busa/goverage/goverage -v -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
@@ -306,14 +315,31 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 # -------------------------------------------------------------------
 # build the binary executable (to ship in prod)
 # -------------------------------------------------------------------
-.PHONE: docker-run-local-postgres
+.PHONY: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres
-	$(info >>--- Starting container $(POSTGRES_CONTAINER_NAME) ---<<)
-	 @[[ "$(docker ps -q --filter "name=$(POSTGRES_CONTAINER_NAME)")xxx" == xxx ]] && \
-		docker run --name $(POSTGRES_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
-		 -d -p $(POSTGRES_CONTAINER_PORT):5432 registry.centos.org/postgresql/postgresql:9.6 >/dev/null
+	$(info >>--- Starting container $(DB_CONTAINER_NAME) ---<<)
+	 @[[ "$(docker ps -q --filter "name=$(DB_CONTAINER_NAME)")xxx" == xxx ]] && \
+		docker run --name $(DB_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
+		 -d -p $(DB_CONTAINER_PORT):5432 $(DB_CONTAINER_IMAGE) >/dev/null
 
+.PHONY: docker-clean-postgres
 docker-clean-postgres:
-	$(info >>--- Stopping container $(POSTGRES_CONTAINER_NAME) ---<<)
-	@docker stop $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
-	@docker rm -f $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
+	$(info >>--- Stopping container $(DB_CONTAINER_NAME) ---<<)
+	@docker rm -f $(DB_CONTAINER_NAME) 2>/dev/null || true
+
+
+.PHONY: docker-run-local-auth
+docker-run-local-auth: docker-clean-auth
+	$(info >>--- Starting container $(AUTH_DB_CONTAINER_NAME) ---<<)
+	docker run --name $(AUTH_DB_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
+		 --detach -p $(AUTH_DB_CONTAINER_PORT):5432 $(AUTH_DB_CONTAINER_IMAGE) >/dev/null
+	docker run --detach --name $(AUTH_CONTAINER_NAME) -p $(AUTH_CONTAINER_PORT):8089 --link $(AUTH_DB_CONTAINER_NAME):$(AUTH_DB_CONTAINER_NAME) \
+		-e AUTH_POSTGRES_HOST=$(AUTH_DB_CONTAINER_NAME) -e AUTH_POSTGRES_PORT=5432 -e AUTH_DEVELOPER_MODE_ENABLED=true \
+		$(AUTH_CONTAINER_IMAGE)
+
+.PHONY: docker-clean-auth
+docker-clean-auth:
+	$(info >>--- Stopping container $(AUTH_DB_CONTAINER_NAME) ---<<)
+	@docker rm -f $(AUTH_DB_CONTAINER_NAME) 2>/dev/null || true
+	$(info >>--- Stopping container $(AUTH_CONTAINER_NAME) ---<<)
+	@docker rm -f $(AUTH_CONTAINER_NAME) 2>/dev/null || true
