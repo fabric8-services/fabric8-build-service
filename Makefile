@@ -274,8 +274,8 @@ clean: $(CLEAN_TARGETS) ## Runs all clean-* targets.
 # run in dev mode
 # -------------------------------------------------------------------
 .PHONY: dev
-dev: prebuild-check deps generate $(FRESH_BIN) docker-run-local-postgres ## run the server locally
-	F8_DEVELOPER_MODE_ENABLED=true $(FRESH_BIN)
+dev: prebuild-check deps generate $(FRESH_BIN)  ## run the server locally
+	F8_POSTGRES_PORT=$(DB_CONTAINER_PORT) F8_DEVELOPER_MODE_ENABLED=true $(FRESH_BIN)
 
 # -------------------------------------------------------------------
 # build the binary executable (to ship in prod)
@@ -316,6 +316,10 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 # -------------------------------------------------------------------
 # build the binary executable (to ship in prod)
 # -------------------------------------------------------------------
+.PHONY: docker-run
+docker-run: docker-run-local-postgres docker-run-local-auth
+	sleep 5 # wait a bit that container came up
+
 .PHONY: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres
 	$(info >>--- Starting container $(DB_CONTAINER_NAME) ---<<)
