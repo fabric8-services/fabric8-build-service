@@ -190,18 +190,6 @@ format-go-code: prebuild-check ## Formats any go file that differs from gofmt's 
 	@gofmt -s -l -w ${GOFORMAT_FILES}
 
 # -------------------------------------------------------------------
-# Generate bindata
-# -------------------------------------------------------------------
-# Pack all migration SQL files into a compilable Go file
-migration/sqlbindata.go: $(GO_BINDATA_BIN) $(wildcard migration/sql-files/*.sql)
-	$(GO_BINDATA_BIN) \
-		-o migration/sqlbindata.go \
-		-pkg migration \
-		-prefix migration/sql-files \
-		-nocompress \
-		migration/sql-files
-
-# -------------------------------------------------------------------
 # support for running in dev mode
 # -------------------------------------------------------------------
 $(FRESH_BIN): $(VENDOR_DIR)
@@ -281,13 +269,26 @@ else
 	go build -v $(LDFLAGS) -o $(BINARY_SERVER_BIN)
 endif
 
-.PHONY: generate
-generate: prebuild-check $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR) migration/sqlbindata.go ## Generate GOA sources. Only necessary after clean of if changed `design` folder.
+# Pack all migration SQL files into a compilable Go file
+migration/sqlbindata.go: $(GO_BINDATA_BIN) $(wildcard migration/sql-files/*.sql)
+	$(GO_BINDATA_BIN) \
+		-o migration/sqlbindata.go \
+		-pkg migration \
+		-prefix migration/sql-files \
+		-nocompress \
+		migration/sql-files
+
+app/controllers.go: $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR)
 	$(GOAGEN_BIN) app -d ${PACKAGE_NAME}/${DESIGN_DIR}
 	$(GOAGEN_BIN) controller -d ${PACKAGE_NAME}/${DESIGN_DIR} -o controller/ --pkg controller --app-pkg ${PACKAGE_NAME}/app
-	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/status --out app
-	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers --out app
 	$(GOAGEN_BIN) swagger -d ${PACKAGE_NAME}/${DESIGN_DIR}
+	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/status --out app
+	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} \
+		--pkg-path=github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers --out app
+
+.PHONY: generate
+## Generate GOA sources. Only necessary after clean of if changed `design` folder.
+generate: app/controllers.go migration/sqlbindata.go
 
 .PHONY: regenerate
 regenerate: clean-generated generate ## Runs the "clean-generated" and the "generate" target
