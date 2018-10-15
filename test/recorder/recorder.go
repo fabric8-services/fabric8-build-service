@@ -1,6 +1,7 @@
 package recorder
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -52,7 +53,7 @@ func JWTMatcher() cassette.Matcher {
 		// check the request URI and method
 		if httpRequest.Method != cassetteRequest.Method ||
 			(httpRequest.URL != nil && httpRequest.URL.String() != cassetteRequest.URL) {
-			log.Debug(nil, map[string]interface{}{
+			log.Debug(context.TODO(), map[string]interface{}{
 				"httpRequest_method":     httpRequest.Method,
 				"cassetteRequest_method": cassetteRequest.Method,
 				"httpRequest_url":        httpRequest.URL,
@@ -66,17 +67,19 @@ func JWTMatcher() cassette.Matcher {
 			return testsupport.PublicKey("../test/public_key.pem")
 		})
 		if err != nil {
-			log.Error(nil, map[string]interface{}{"error": err.Error(), "request_method": cassetteRequest.Method, "request_url": cassetteRequest.URL, "authorization_header": httpRequest.Header["Authorization"]}, "failed to parse token from request")
+			log.Error(context.TODO(), map[string]interface{}{"error": err.Error(), "request_method": cassetteRequest.Method, "request_url": cassetteRequest.URL, "authorization_header": httpRequest.Header["Authorization"]}, "failed to parse token from request")
 			return false
 		}
 		claims := token.Claims.(jwt.MapClaims)
-		log.Debug(nil, map[string]interface{}{
+		// nolint
+		log.Debug(context.TODO(), map[string]interface{}{
 			"httpRequest_method":  httpRequest.Method,
 			"httpRequest_url":     httpRequest.URL,
 			"cassetteRequest_sub": cassetteRequest.Headers["sub"],
 			"request_token_sub":   claims["sub"],
 		}, "comparing `sub` headers")
 
+		// nolint
 		if sub, found := cassetteRequest.Headers["sub"]; found {
 			return sub[0] == claims["sub"]
 		}

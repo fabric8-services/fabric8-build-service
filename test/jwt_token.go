@@ -1,6 +1,8 @@
 package test
 
 import (
+	"context"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/fabric8-services/fabric8-common/log"
 )
@@ -18,6 +20,6 @@ func NewToken(claims map[string]interface{}, privatekeyFilename string) (*jwt.To
 		return nil, err
 	}
 	token.Raw = signed
-	log.Debug(nil, map[string]interface{}{"signed_token": signed, "claims": claims}, "generated test token with custom sub")
+	log.Debug(context.TODO(), map[string]interface{}{"signed_token": signed, "claims": claims}, "generated test token with custom sub")
 	return token, nil
 }
