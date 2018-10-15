@@ -90,7 +90,7 @@ image: clean-artifacts build-linux ## Build the docker image
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check docker-run-local-postgres $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check generate docker-run-local-postgres $(SOURCES) ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	sleep 5  # just so we get the postgres docker starting
