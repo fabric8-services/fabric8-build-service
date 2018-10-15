@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/fabric8-services/fabric8-auth/errors"
-	"github.com/fabric8-services/fabric8-tenant/auth"
-	"github.com/fabric8-services/fabric8-tenant/configuration"
-	testsupport "github.com/fabric8-services/fabric8-tenant/test"
-	"github.com/fabric8-services/fabric8-tenant/test/doubles"
-	"github.com/fabric8-services/fabric8-tenant/test/recorder"
+	"github.com/fabric8-services/fabric8-build-service/auth"
+	"github.com/fabric8-services/fabric8-build-service/configuration"
+	testsupport "github.com/fabric8-services/fabric8-build-service/test"
+	testdoubles "github.com/fabric8-services/fabric8-build-service/test/doubles"
+	"github.com/fabric8-services/fabric8-build-service/test/recorder"
 	goajwt "github.com/goadesign/goa/middleware/security/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -209,7 +209,7 @@ func TestInitializeAuthServiceAndGetSaToken(t *testing.T) {
 		require.NoError(t, err)
 	}()
 	require.NoError(t, err)
-	config, err := configuration.GetData()
+	config, err := configuration.GetConfig()
 	require.NoError(t, err)
 
 	// when
