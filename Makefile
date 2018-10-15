@@ -281,7 +281,7 @@ dev: prebuild-check deps generate $(FRESH_BIN) docker-run-local-postgres ## run 
 # build the binary executable (to ship in prod)
 # -------------------------------------------------------------------
 .PHONY: build
-build: prebuild-check deps ## Build the server
+build: prebuild-check deps generate ## Build the server
 ifeq ($(OS),Windows_NT)
 	go build -v $(LDFLAGS) -o "$(shell cygpath --windows '$(BINARY_SERVER_BIN)')"
 else
@@ -304,6 +304,7 @@ app/controllers.go: $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR)
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} --pkg-path=github.com/fabric8-services/fabric8-common/goasupport/status --out app
 	$(GOAGEN_BIN) gen -d ${PACKAGE_NAME}/${DESIGN_DIR} \
 		--pkg-path=github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers --out app
+	$(GOAGEN_BIN) client -d github.com/fabric8-services/fabric8-auth/design --notool --out auth --pkg client
 
 .PHONY: generate
 ## Generate GOA sources. Only necessary after clean of if changed `design` folder.
