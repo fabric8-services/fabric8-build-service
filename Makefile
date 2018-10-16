@@ -199,10 +199,15 @@ analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 	@golangci-lint run --out-format=line-number --enable=golint --enable=govet \
 	 --enable=gocyclo --enable=goconst --enable=unconvert \
+<<<<<<< HEAD
 	 --exclude-use-default=false --skip-dirs 'design/*' \
 	 --skip-files 'migration/sqlbindata.go' \
 	 -e '.*which can be annoying to use.*' \
 	 -e '.((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked'
+=======
+	 --exclude-use-default=false --skip-dirs 'design/*'  \
+	 --skip-files 'migration/sqlbindata.go' -e '.*which can be annoying to use.*'
+>>>>>>> Readd golangci checks on tests
 
 .PHONY: format-go-code
 format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style
