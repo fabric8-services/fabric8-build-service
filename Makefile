@@ -96,16 +96,17 @@ test-unit: prebuild-check docker-run-local-postgres $(SOURCES) generate ## Runs 
 	sleep 5  # just so we get the postgres docker starting
 	F8_POSTGRES_PORT="$(DB_CONTAINER_PORT)" \
 	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
-	F8_LOG_LEVEL=$(F8_LOG_LEVEL) go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
+	F8_LOG_LEVEL=$(F8_LOG_LEVEL) \
+	go test -v $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
 .PHONY: coverage
 coverage: prebuild-check deps $(SOURCES) ## Run coverage
 	$(call log-info,"Running coverage: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	@cd $(VENDOR_DIR)/github.com/haya14busa/goverage && go build
-	F8_POSTGRES_PORT=$(DB_CONTAINER_PORT) && \
-	F8_RESOURCE_UNIT_TEST=1 F8_DEVELOPER_MODE_ENABLED=1 \
-	F8_RESOURCE_UNIT_TEST=1 F8_LOG_LEVEL=$(F8_LOG_LEVEL) F8_RESOURCE_DATABASE=1 \
+	F8_POSTGRES_PORT=$(DB_CONTAINER_PORT) \
+	F8_DEVELOPER_MODE_ENABLED=1 F8_RESOURCE_UNIT_TEST=1 \
+	F8_LOG_LEVEL=$(F8_LOG_LEVEL) F8_RESOURCE_DATABASE=1 \
 	./vendor/github.com/haya14busa/goverage/goverage -v -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
 	@go tool cover -func tmp/coverage.out
 
