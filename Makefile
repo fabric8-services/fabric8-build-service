@@ -318,7 +318,7 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 # build the binary executable (to ship in prod)
 # -------------------------------------------------------------------
 .PHONY: docker-run
-docker-run: docker-run-local-postgres docker-run-local-auth
+docker-run: docker-run-local-postgres docker-run-local-auth ## Runs all the docker images
 	sleep 5 # wait a bit that container came up
 
 .PHONY: docker-run-local-postgres
