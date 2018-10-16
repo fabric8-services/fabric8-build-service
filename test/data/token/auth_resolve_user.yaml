@@ -18,13 +18,26 @@ interactions:
            	}'
 - request:
     method: GET
+    url: http://authservice/api/users/no_attributes
+    headers:
+      sub: ["tenant_service"] # will be compared against the `sub` claim in the incoming request's token
+  response:
+    status: 200 OK
+    code: 200
+    body: '{
+           	  "data": {
+           		"attributes": {}
+           	  }
+           	}'
+- request:
+    method: GET
     url: http://authservice/api/token?for=fake-cluster.com&force_pull=false
     headers:
       sub: ["normal_user"] # will be compared against the `sub` claim in the incoming request's token
   response:
     status: 200 OK
     code: 200
-    body: '{ 
+    body: '{
 			"access_token": "an_openshift_token",
 			"token_type": "bearer",
 			"username": "user_foo"

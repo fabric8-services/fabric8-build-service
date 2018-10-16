@@ -133,6 +133,11 @@ func TestUserProfileClient_GetUserCluster(t *testing.T) {
 			wantErr: "invalid character",
 			user:    "wrong_output_user",
 		},
+		{
+			name:    "no attributes",
+			wantErr: "undefined cluster",
+			user:    "no_attributes",
+		},
 	}
 
 	authClientService, cleanup := testdoubles.NewAuthService(t, "../test/data/token/auth_resolve_user", "http://authservice", recorder.WithJWTMatcher)
@@ -219,4 +224,21 @@ func TestInitializeAuthServiceAndGetSaToken(t *testing.T) {
 	require.NoError(t, err)
 	expSaToken := "jA0ECQMC5AvXo6Jyrj5g0kcBv6Qp8ZTWCgYD6TESuc2OxSDZ1lic1tmV6g4IcQUBlohjT3gyQX2oTa1bWfNkk8xY6wyPq8CUK3ReOnnDK/yo661f6LXgvA=="
 	assert.Equal(t, authService.SaToken, expSaToken)
+}
+
+func TestNewAuthServiceMissingJWTToken(t *testing.T) {
+	var unknownhost = "authserviceXXF1234"
+
+	reset := testdoubles.SetEnvironments(
+		testdoubles.Env("F8_AUTH_URL", "http://"+unknownhost),
+	)
+	defer reset()
+	// given
+	config, _ := configuration.GetConfig()
+
+	srv, _ := auth.NewAuthService(config)
+	_, err := srv.GetUser(context.TODO())
+
+	testsupport.AssertError(t, err, testsupport.HasMessageContaining(
+		"Missing JWT token"))
 }

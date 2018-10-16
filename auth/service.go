@@ -67,7 +67,8 @@ func (s *Service) GetUser(ctx context.Context) (*User, error) {
 
 	if userData.Cluster == nil {
 		log.Error(ctx, nil, "no cluster defined for tenant")
-		return nil, commonerrs.NewInternalError(ctx, fmt.Errorf("unable to provision to undefined cluster"))
+		validationerror := commonerrs.NewInternalError(ctx, fmt.Errorf("unable to provision to undefined cluster"))
+		return nil, errors.Wrapf(validationerror, "error from server %q", s.GetAuthURL())
 	}
 
 	// fetch the users cluster token
