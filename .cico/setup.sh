@@ -9,11 +9,22 @@ export PATH=$PATH:$GOPATH/bin
 REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build-service
 REGISTRY="quay.io"
 
+function addCommentToPullRequest() {
+    message="$1"
+    pr="$2"
+    project="$3"
+    url="https://api.github.com/repos/${project}/issues/${pr}/comments"
+
+    set +x
+    echo curl -X POST -s -L -H "Authorization: XXXX|base64 --decode)" ${url} -d "{\"body\": \"${message}\"}"
+    curl -X POST -s -L -H "Authorization: token $(echo ${FABRIC8_HUB_TOKEN}|base64 --decode)" ${url} -d "{\"body\": \"${message}\"}"
+    set -x
+}
+
 function setup() {
     if [ -f jenkins-env.json ]; then
         eval "$(./env-toolkit load -f jenkins-env.json \
                 FABRIC8_HUB_TOKEN \
-                FABRIC8_DOCKERIO_CFG \
                 ghprbActualCommit \
                 ghprbPullAuthorLogin \
                 ghprbGhRepository \
@@ -21,6 +32,7 @@ function setup() {
                 GIT_COMMIT \
                 QUAY_USERNAME \
                 QUAY_PASSWORD \
+                BUILD_URL \
                 BUILD_ID)"
     fi
 
@@ -45,7 +57,8 @@ function tag_push() {
     docker push ${image}:${tag}
 }
 
-function deploy() {
+
+function _deploy() {
   # Login first
   cd ${REPO_PATH}
 
@@ -69,6 +82,17 @@ function deploy() {
   fi
 
   echo 'CICO: Image pushed, ready to update deployed app'
+}
+
+function deploy() {
+    set +e
+    _deploy || fail=true
+    set -e
+
+    if [[ -n ${fail} ]];then
+        addCommentToPullRequest "Merge job has failed see: ${BUILD_URL}/consoleText" "${ghprbPullId}" "${ghprbGhRepository}"
+        exit 1
+    fi
 }
 
 function dotest() {
