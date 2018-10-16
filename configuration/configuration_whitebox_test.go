@@ -15,6 +15,12 @@ var reqLong *goa.RequestData
 var reqShort *goa.RequestData
 var config *Config
 
+const (
+	envF8DevMode              = "F8_DEVELOPER_MODE_ENABLED"
+	envF8LogJSON              = "F8_LOG_JSON"
+	envF8DiagnoseHTTPAddresse = "F8_DIAGNOSE_HTTP_ADDRESS"
+)
+
 func init() {
 
 	// ensure that the content here is executed only once.
@@ -56,4 +62,79 @@ func TestGetLogLevelOK(t *testing.T) {
 	resetConfiguration()
 
 	assert.Equal(t, "warning", config.GetLogLevel())
+}
+
+func TestConfigFileNotFound(t *testing.T) {
+	resource.Require(t, resource.UnitTest)
+	_, err := New("/unkown/file")
+	assert.Error(t, err)
+}
+
+func TestDeveloperEnabled(t *testing.T) {
+	resource.Require(t, resource.UnitTest)
+
+	realEnvValue := os.Getenv(envF8DevMode)
+
+	os.Setenv(envF8DevMode, "1")
+	cfg, _ := New("")
+	assert.True(t, cfg.DeveloperModeEnabled())
+
+	os.Unsetenv(envF8DevMode)
+	cfg, _ = New("")
+	assert.False(t, cfg.DeveloperModeEnabled())
+
+	os.Setenv(envF8DevMode, realEnvValue)
+}
+
+func TestLogJSONConfig(t *testing.T) {
+	resource.Require(t, resource.UnitTest)
+
+	realDevEnvValue := os.Getenv(envF8DevMode)
+
+	realLogJSONEnvValue := os.Getenv(envF8LogJSON)
+
+	os.Unsetenv(envF8DevMode)
+	os.Unsetenv(envF8LogJSON)
+	cfg, _ := New("")
+	assert.True(t, cfg.IsLogJSON())
+
+	os.Setenv(envF8DevMode, "1")
+	os.Unsetenv(envF8LogJSON)
+	cfg, _ = New("")
+	assert.False(t, cfg.IsLogJSON())
+
+	os.Setenv(envF8DevMode, "1")
+	os.Setenv(envF8LogJSON, "1")
+	cfg, _ = New("")
+	assert.True(t, cfg.IsLogJSON())
+
+	os.Setenv(envF8DevMode, realDevEnvValue)
+	os.Setenv(envF8LogJSON, realLogJSONEnvValue)
+}
+
+func TestIsDiagnosisAddress(t *testing.T) {
+	resource.Require(t, resource.UnitTest)
+
+	realDevEnvValue := os.Getenv(envF8DevMode)
+
+	realDiagEnvValue := os.Getenv(envF8DiagnoseHTTPAddresse)
+
+	os.Unsetenv(envF8DevMode)
+	os.Setenv(envF8DiagnoseHTTPAddresse, "FOO")
+	cfg, _ := New("")
+	assert.Equal(t, "FOO", cfg.GetDiagnoseHTTPAddress())
+
+	os.Setenv(envF8DevMode, "1")
+	os.Unsetenv(envF8DiagnoseHTTPAddresse)
+	cfg, _ = New("")
+	assert.Equal(t, "127.0.0.1:0", cfg.GetDiagnoseHTTPAddress())
+
+	os.Unsetenv(envF8DevMode)
+	os.Unsetenv(envF8DiagnoseHTTPAddresse)
+	cfg, _ = New("")
+	assert.Equal(t, "", cfg.GetDiagnoseHTTPAddress())
+
+	os.Setenv(envF8DevMode, realDevEnvValue)
+	os.Setenv(envF8DiagnoseHTTPAddresse, realDiagEnvValue)
+
 }
