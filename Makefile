@@ -196,12 +196,7 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the code.
 	$(info >>--- RESULTS: GOLANGCI CODE ANALYSIS ---<<)
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-	@golangci-lint run --out-format=line-number --enable=golint --enable=govet \
-	 --enable=gocyclo --enable=goconst --enable=unconvert \
-	 --exclude-use-default=false --skip-dirs 'design/*' \
-	 --skip-files 'migration/sqlbindata.go' \
-	 -e '.*which can be annoying to use.*' \
-	 -e '.((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked'
+	@golangci-lint run
 
 .PHONY: format-go-code
 format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style
