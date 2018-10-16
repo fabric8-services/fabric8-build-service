@@ -90,10 +90,9 @@ image: clean-artifacts build-linux ## Build the docker image
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check docker-run-local-postgres $(SOURCES) generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check $(SOURCES) generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
-	sleep 5  # just so we get the postgres docker starting
 	F8_POSTGRES_PORT="$(DB_CONTAINER_PORT)" \
 	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_LOG_LEVEL=$(F8_LOG_LEVEL) \
@@ -199,15 +198,10 @@ analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 	@golangci-lint run --out-format=line-number --enable=golint --enable=govet \
 	 --enable=gocyclo --enable=goconst --enable=unconvert \
-<<<<<<< HEAD
 	 --exclude-use-default=false --skip-dirs 'design/*' \
 	 --skip-files 'migration/sqlbindata.go' \
 	 -e '.*which can be annoying to use.*' \
 	 -e '.((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked'
-=======
-	 --exclude-use-default=false --skip-dirs 'design/*'  \
-	 --skip-files 'migration/sqlbindata.go' -e '.*which can be annoying to use.*'
->>>>>>> Readd golangci checks on tests
 
 .PHONY: format-go-code
 format-go-code: prebuild-check ## Formats any go file that differs from gofmt's style
@@ -324,7 +318,6 @@ regenerate: clean-generated generate ## Runs the "clean-generated" and the "gene
 # -------------------------------------------------------------------
 .PHONY: docker-run
 docker-run: docker-run-local-postgres docker-run-local-auth ## Runs all the docker images
-	sleep 5 # wait a bit that container came up
 
 .PHONY: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres

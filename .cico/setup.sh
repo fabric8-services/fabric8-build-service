@@ -84,6 +84,7 @@ function _deploy() {
   echo 'CICO: Image pushed, ready to update deployed app'
 }
 
+
 function deploy() {
     set +e
     _deploy || fail=true
@@ -98,13 +99,44 @@ function deploy() {
     fi
 }
 
+function check_up() {
+    service=$1
+    host=$2
+    port=$3
+    max=30 # 1 minute
+
+    counter=1
+    while true;do
+        python -c "import socket;s = socket.socket(socket.AF_INET, socket.SOCK_STREAM);s.connect(('$host', $port))" \
+        >/dev/null 2>/dev/null && break || \
+        echo "CICO: Waiting that $service on ${host}:${port} is started (sleeping for 2)"
+
+        if [[ ${counter} == ${max} ]];then
+            echo "CICO: Could not connect to ${service} after some time"
+            echo "CICO: Investigate locally the logs with fig logs"
+            exit 1
+        fi
+
+        sleep 2
+
+        (( counter++ ))
+    done
+}
+
 function dotest() {
     cd ${REPO_PATH}
-
     make build
+
+    make docker-run
+
+    check_up postgres-build 127.0.0.1 5433
+    check_up postgres-auth 127.0.0.1 5434
+    check_up auth 127.0.0.1 8089
+
     make test-unit
 
     make analyze-go-code
+
     make coverage
 
     # Upload to codecov
