@@ -19,6 +19,7 @@ const (
 	envF8DevMode              = "F8_DEVELOPER_MODE_ENABLED"
 	envF8LogJSON              = "F8_LOG_JSON"
 	envF8DiagnoseHTTPAddresse = "F8_DIAGNOSE_HTTP_ADDRESS"
+	envF8Environment          = "F8_ENVIRONMENT"
 )
 
 func init() {
@@ -84,6 +85,22 @@ func TestDeveloperEnabled(t *testing.T) {
 	assert.False(t, cfg.DeveloperModeEnabled())
 
 	os.Setenv(envF8DevMode, realEnvValue)
+}
+
+func TestGetEnvironment(t *testing.T) {
+	resource.Require(t, resource.UnitTest)
+
+	realEnvValue := os.Getenv(envF8Environment)
+
+	os.Setenv(envF8Environment, "ENVIRON")
+	cfg, _ := New("")
+	assert.Equal(t, "ENVIRON", cfg.GetEnvironment())
+
+	os.Unsetenv(envF8Environment)
+	cfg, _ = New("")
+	assert.Equal(t, "local", cfg.GetEnvironment())
+
+	os.Setenv(envF8Environment, realEnvValue)
 }
 
 func TestLogJSONConfig(t *testing.T) {
