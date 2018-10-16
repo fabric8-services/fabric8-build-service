@@ -5,7 +5,9 @@ set -ex
 
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
+
 REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build-service
+REGISTRY="quay.io"
 
 function setup() {
     if [ -f jenkins-env.json ]; then
@@ -30,6 +32,7 @@ function setup() {
 
     mkdir -p $(dirname ${REPO_PATH})
     cp -a ${HOME}/payload ${REPO_PATH}
+    cd ${REPO}
 
     echo 'CICO: Build environment created.'
 }
@@ -44,7 +47,8 @@ function tag_push() {
 
 function deploy() {
   # Login first
-  REGISTRY="quay.io"
+  cd ${REPO_PATH}
+
 
   if [ -n "${QUAY_USERNAME}" -a -n "${QUAY_PASSWORD}" ]; then
     docker login -u ${QUAY_USERNAME} -p ${QUAY_PASSWORD} ${REGISTRY}
