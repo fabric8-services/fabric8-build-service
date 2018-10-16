@@ -91,7 +91,7 @@ function deploy() {
     set -e
 
     fail=true #TEST TO REMOVE
-
+    cat jenkins-env.json
 
     if [[ -n ${fail} ]];then
         addCommentToPullRequest "Merge job has failed see: ${BUILD_URL}/consoleText" "${ghprbPullId}" "${ghprbGhRepository}"
