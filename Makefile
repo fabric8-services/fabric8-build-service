@@ -193,7 +193,7 @@ check-go-format: prebuild-check deps ## Exists with an error if there are files 
 
 # TODO(chmou): https://git.io/fxzkM
 .PHONY: analyze-go-code
-analyze-go-code: $(GOLANGCI_BIN) deps generate ## Run golangci analysis over the code.
+analyze-go-code: deps generate ## Run golangci analysis over the code.
 	$(info >>--- RESULTS: GOLANGCI CODE ANALYSIS ---<<)
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 	@golangci-lint run
@@ -219,7 +219,6 @@ $(GOAGEN_BIN): $(VENDOR_DIR)
 # -------------------------------------------------------------------
 $(GO_BINDATA_BIN): $(VENDOR_DIR)
 	cd $(VENDOR_DIR)/github.com/jteeuwen/go-bindata/go-bindata && go build -v
-
 
 # -------------------------------------------------------------------
 # clean
