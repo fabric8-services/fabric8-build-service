@@ -3,7 +3,7 @@ package controller
 import (
 	"time"
 
-	"github.com/fabric8-services/fabric8-build-service/app"
+	"github.com/fabric8-services/fabric8-build/app"
 	"github.com/goadesign/goa"
 )
 

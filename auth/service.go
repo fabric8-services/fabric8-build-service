@@ -10,8 +10,8 @@ import (
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
-	authclient "github.com/fabric8-services/fabric8-build-service/auth/client"
-	"github.com/fabric8-services/fabric8-build-service/configuration"
+	authclient "github.com/fabric8-services/fabric8-build/auth/client"
+	"github.com/fabric8-services/fabric8-build/configuration"
 	commonerrs "github.com/fabric8-services/fabric8-common/errors"
 	"github.com/fabric8-services/fabric8-common/log"
 	"github.com/fabric8-services/fabric8-wit/rest"

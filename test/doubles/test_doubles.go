@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	vcrrecorder "github.com/dnaeon/go-vcr/recorder"
-	"github.com/fabric8-services/fabric8-build-service/auth"
-	"github.com/fabric8-services/fabric8-build-service/configuration"
-	"github.com/fabric8-services/fabric8-build-service/test/recorder"
+	"github.com/fabric8-services/fabric8-build/auth"
+	"github.com/fabric8-services/fabric8-build/configuration"
+	"github.com/fabric8-services/fabric8-build/test/recorder"
 	"github.com/stretchr/testify/require"
 )
 

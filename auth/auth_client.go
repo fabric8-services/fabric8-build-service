@@ -8,8 +8,8 @@ import (
 
 	"github.com/fabric8-services/fabric8-auth/errors"
 
-	authclient "github.com/fabric8-services/fabric8-build-service/auth/client"
-	"github.com/fabric8-services/fabric8-build-service/configuration"
+	authclient "github.com/fabric8-services/fabric8-build/auth/client"
+	"github.com/fabric8-services/fabric8-build/configuration"
 	"github.com/fabric8-services/fabric8-common/log"
 	goaclient "github.com/goadesign/goa/client"
 )

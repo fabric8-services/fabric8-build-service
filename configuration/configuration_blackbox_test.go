@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fabric8-services/fabric8-build-service/configuration"
+	"github.com/fabric8-services/fabric8-build/configuration"
 	"github.com/goadesign/goa"
 )
 

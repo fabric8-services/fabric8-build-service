@@ -1,4 +1,4 @@
-PROJECT_NAME=fabric8-build-service
+PROJECT_NAME=fabric8-build
 PACKAGE_NAME:=github.com/fabric8-services/$(PROJECT_NAME)
 CUR_DIR=$(shell pwd)
 TMP_PATH=$(CUR_DIR)/tmp

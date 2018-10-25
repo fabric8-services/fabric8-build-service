@@ -6,7 +6,7 @@ set -ex
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOPATH/bin
 
-REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build-service
+REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build
 REGISTRY="quay.io"
 
 function addCommentToPullRequest() {
@@ -69,16 +69,16 @@ function _deploy() {
     echo "Could not login, missing credentials for the registry"
   fi
 
-  # Build fabric8-build-service
+  # Build fabric8-build
   make image
 
   TAG=$(echo $GIT_COMMIT | cut -c1-${DEVSHIFT_TAG_LEN})
   if [ "$TARGET" = "rhel" ]; then
-    tag_push ${REGISTRY}/openshiftio/rhel-fabric8-services-fabric8-build-service $TAG
-    tag_push ${REGISTRY}/openshiftio/rhel-fabric8-services-fabric8-build-service latest
+    tag_push ${REGISTRY}/openshiftio/rhel-fabric8-services-fabric8-build $TAG
+    tag_push ${REGISTRY}/openshiftio/rhel-fabric8-services-fabric8-build latest
   else
-    tag_push ${REGISTRY}/openshiftio/fabric8-services-fabric8-build-service $TAG
-    tag_push ${REGISTRY}/openshiftio/fabric8-services-fabric8-build-service latest
+    tag_push ${REGISTRY}/openshiftio/fabric8-services-fabric8-build $TAG
+    tag_push ${REGISTRY}/openshiftio/fabric8-services-fabric8-build latest
   fi
 
   echo 'CICO: Image pushed, ready to update deployed app'

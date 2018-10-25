@@ -9,11 +9,11 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/fabric8-services/fabric8-build-service/app"
-	"github.com/fabric8-services/fabric8-build-service/auth"
-	"github.com/fabric8-services/fabric8-build-service/configuration"
-	"github.com/fabric8-services/fabric8-build-service/controller"
-	"github.com/fabric8-services/fabric8-build-service/migration"
+	"github.com/fabric8-services/fabric8-build/app"
+	"github.com/fabric8-services/fabric8-build/auth"
+	"github.com/fabric8-services/fabric8-build/configuration"
+	"github.com/fabric8-services/fabric8-build/controller"
+	"github.com/fabric8-services/fabric8-build/migration"
 	"github.com/fabric8-services/fabric8-common/log"
 	"github.com/fabric8-services/fabric8-common/metric"
 	"github.com/fabric8-services/fabric8-common/sentry"
@@ -118,7 +118,7 @@ func main() {
 	printUserInfo()
 
 	// Create service
-	service := goa.New("fabric8-build-service")
+	service := goa.New("fabric8-build")
 
 	// Mount middleware
 	service.Use(middleware.RequestID())

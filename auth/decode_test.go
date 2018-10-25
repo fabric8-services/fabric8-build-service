@@ -3,8 +3,8 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/fabric8-services/fabric8-build-service/auth"
-	testsupport "github.com/fabric8-services/fabric8-build-service/test"
+	"github.com/fabric8-services/fabric8-build/auth"
+	testsupport "github.com/fabric8-services/fabric8-build/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
