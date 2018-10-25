@@ -1,0 +1,151 @@
+kind: Template
+apiVersion: v1
+metadata:
+  name: f8build
+objects:
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    labels:
+      service: f8build
+    name: f8build
+  spec:
+    replicas: ${{REPLICAS}}
+    selector:
+      service: f8build
+    strategy:
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          service: f8build
+      spec:
+        containers:
+        - image: ${IMAGE}:${IMAGE_TAG}
+          env:
+          - name: F8_POSTGRES_HOST
+            valueFrom:
+              secretKeyRef:
+                name: f8build
+                key: db.host
+          - name: F8_POSTGRES_PORT
+            valueFrom:
+              secretKeyRef:
+                name: f8build
+                key: db.port
+          - name: F8_POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: f8build
+                key: db.user
+          - name: F8_POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: f8build
+                key: db.password
+          - name: F8_SENTRY_DSN
+            valueFrom:
+              secretKeyRef:
+                name: f8build
+                key: sentry.dsn
+          - name: F8_POSTGRES_SSLMODE
+            valueFrom:
+              configMapKeyRef:
+                name: f8build
+                key: postgres.sslmode
+          - name: F8_POSTGRES_CONNECTION_MAXIDLE
+            valueFrom:
+              configMapKeyRef:
+                name: f8build
+                key: postgres.connection.maxidle
+          - name: F8_POSTGRES_CONNECTION_MAXOPEN
+            valueFrom:
+              configMapKeyRef:
+                name: f8build
+                key: postgres.connection.maxopen
+          - name: F8_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: f8build
+                key: environment
+          - name: F8_AUTH_URL
+            valueFrom:
+              configMapKeyRef:
+                name: f8build
+                key: auth.url
+          imagePullPolicy: Always
+          name: f8build
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/status
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/status
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 0.1m
+              memory: 10Mi
+            limits:
+              cpu: 400m
+              memory: 1.5Gi
+          terminationMessagePath: /dev/termination-log
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+  status:
+    details:
+      causes:
+      - type: ConfigChange
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: f8build
+    labels:
+      service: f8build
+  spec:
+    ports:
+      - name: "8080"
+        protocol: TCP
+        port: 80
+        targetPort: 8080
+    selector:
+      service: f8build
+    type: ClusterIP
+    sessionAffinity: null
+parameters:
+- name: IMAGE
+  value: quay.io/openshiftio/rhel-fabric8-services-fabric8-build
+- name: IMAGE_TAG
+  value: latest
+- description: Number of deployment replicas
+  displayName: Number of deployment replicas
+  required: true
+  name: REPLICAS
+  value: '1'

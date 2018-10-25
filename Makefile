@@ -65,10 +65,10 @@ REGISTRY_NS = fabric8-services
 REGISTRY_IMAGE = ${PROJECT_NAME}
 
 ifeq ($(TARGET),rhel)
-	REGISTRY_URL := ${REGISTRY_URI}/openshiftio/rhel-${REGISTRY_NS}-${REGISTRY_IMAGE}
+	REGISTRY_URL_IMAGE := ${REGISTRY_URI}/openshiftio/rhel-${REGISTRY_NS}-${REGISTRY_IMAGE}
 	DOCKERFILE := ./.make/Dockerfile.rhel
 else
-	REGISTRY_URL := ${REGISTRY_URI}/openshiftio/${REGISTRY_NS}-${REGISTRY_IMAGE}
+	REGISTRY_URL_IMAGE := ${REGISTRY_URI}/openshiftio/${REGISTRY_NS}-${REGISTRY_IMAGE}
 	DOCKERFILE := ./.make/Dockerfile
 endif
 
@@ -81,7 +81,7 @@ build-linux: prebuild-check deps generate ## Builds the Linux binary for the con
 
 .PHONY: image
 image: clean-artifacts build-linux ## Build the docker image
-	docker build -t $(REGISTRY_URL) \
+	docker build -t $(REGISTRY_URL_IMAGE) \
 	  --build-arg BUILD_DIR=$(BUILD_DIR)\
 	  --build-arg PROJECT_NAME=$(PROJECT_NAME)\
 	  -f $(DOCKERFILE) .
@@ -90,7 +90,7 @@ image: clean-artifacts build-linux ## Build the docker image
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check $(SOURCES) generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check $(SOURCES) docker-run generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	F8_POSTGRES_PORT="$(DB_CONTAINER_PORT)" \
@@ -307,11 +307,15 @@ generate: app/controllers.go migration/sqlbindata.go
 .PHONY: regenerate
 regenerate: clean-generated generate ## Runs the "clean-generated" and the "generate" target
 
-# -------------------------------------------------------------------
-# build the binary executable (to ship in prod)
-# -------------------------------------------------------------------
+.PHONY: print-env
+print-env:
+	$(foreach var,$(.VARIABLES),$(info $(var)="$($(var))"))
+
+# -----------------------------
+# Run into docker for unitests
+# -----------------------------
 .PHONY: docker-run
-docker-run: docker-run-local-postgres docker-run-local-auth ## Runs all the docker images
+docker-run: docker-run-local-postgres ## Runs all the docker images
 
 .PHONY: docker-run-local-postgres
 docker-run-local-postgres: docker-clean-postgres ## Runs db with Docker
@@ -319,25 +323,22 @@ docker-run-local-postgres: docker-clean-postgres ## Runs db with Docker
 	 @[[ "$(docker ps -q --filter "name=$(DB_CONTAINER_NAME)")xxx" == xxx ]] && \
 		docker run --name $(DB_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
 		 -d -p $(DB_CONTAINER_PORT):5432 $(DB_CONTAINER_IMAGE) >/dev/null
+	sleep 2 # sleep for a bit that it started
 
 .PHONY: docker-clean-postgres
 docker-clean-postgres:
 	$(info >>--- Stopping container $(DB_CONTAINER_NAME) ---<<)
 	@docker rm -f $(DB_CONTAINER_NAME) 2>/dev/null || true
 
+.PHONY: deploy-openshift-dev
+deploy-openshift-dev: ## Deploy to an (already running) openshift environement
+	$(info >>-- Running the whole thing in openshift)
+	@./openshift/deploy-openshift-dev.sh
 
-.PHONY: docker-run-local-auth
-docker-run-local-auth: docker-clean-auth ## Runs local auth in Docker
-	$(info >>--- Starting container $(AUTH_DB_CONTAINER_NAME) ---<<)
-	docker run --name $(AUTH_DB_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
-		 --detach -p $(AUTH_DB_CONTAINER_PORT):5432 $(AUTH_DB_CONTAINER_IMAGE) >/dev/null
-	docker run --detach --name $(AUTH_CONTAINER_NAME) -p $(AUTH_CONTAINER_PORT):8089 --link $(AUTH_DB_CONTAINER_NAME):$(AUTH_DB_CONTAINER_NAME) \
-		-e AUTH_POSTGRES_HOST=$(AUTH_DB_CONTAINER_NAME) -e AUTH_POSTGRES_PORT=5432 -e AUTH_DEVELOPER_MODE_ENABLED=true \
-		$(AUTH_CONTAINER_IMAGE)
 
-.PHONY: docker-clean-auth
-docker-clean-auth:
-	$(info >>--- Stopping container $(AUTH_DB_CONTAINER_NAME) ---<<)
-	@docker rm -f $(AUTH_DB_CONTAINER_NAME) 2>/dev/null || true
-	$(info >>--- Stopping container $(AUTH_CONTAINER_NAME) ---<<)
-	@docker rm -f $(AUTH_CONTAINER_NAME) 2>/dev/null || true
+.PHONY: deploy-minishift
+deploy-minishift-dev: build ## Deploy to a minishift environement
+	$(info >>-- Running in minishift)
+	eval `minishift docker-env` && eval `minishift oc-env` && \
+		make image && \
+		./openshift/deploy-openshift-dev.sh

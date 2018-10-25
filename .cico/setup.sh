@@ -126,8 +126,6 @@ function dotest() {
     make docker-run
 
     check_up postgres-build 127.0.0.1 5433
-    check_up postgres-auth 127.0.0.1 5434
-    check_up auth 127.0.0.1 8089
 
     make test-unit
 
