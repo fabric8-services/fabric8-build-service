@@ -11,4 +11,4 @@ TBD
 AUTHORS
 =======
 
-Fabric8-build-team <fabric8-build@redhat.com>
+Fabric8-build-team <devtools-build@redhat.com>
