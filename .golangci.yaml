@@ -9,6 +9,7 @@ linters:
     - lll
     - gosec
     - prealloc
+    - megacheck
   enable-all: true
 
 issues:
