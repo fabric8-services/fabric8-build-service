@@ -30,6 +30,7 @@ function setup() {
                 ghprbGhRepository \
                 ghprbPullId \
                 GIT_COMMIT \
+                DEVSHIFT_TAG_LEN \
                 QUAY_USERNAME \
                 QUAY_PASSWORD \
                 BUILD_URL \
