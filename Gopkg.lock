@@ -26,6 +26,15 @@
   version = "2018.01.18"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/chmouel/fresh"
+  packages = [
+    ".",
+    "runner"
+  ]
+  revision = "9dfc5b499a0576f13333039a32f5ca9693d4d0dc"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
@@ -293,15 +302,6 @@
   revision = "3eb99e6c0b9a2dae0f56f05552c06ca5a643919b"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/pilu/fresh"
-  packages = [
-    ".",
-    "runner"
-  ]
-  revision = "9c0092493eff2825c3abf64e087b3383dec939c3"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -485,6 +485,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0c77f9d21215c45fdae126303dae8cabe0571a8116799e9dddcb0936e49f5174"
+  inputs-digest = "960235e3c11951513aa0529f68f288299f53da264a0fdc58aaaea539b2f30e69"
   solver-name = "gps-cdcl"
   solver-version = 1

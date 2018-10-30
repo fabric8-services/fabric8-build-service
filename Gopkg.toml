@@ -44,7 +44,7 @@ required = [
   "github.com/davecgh/go-spew/spew",
   "github.com/haya14busa/goverage",
   "github.com/jteeuwen/go-bindata/go-bindata",
-  "github.com/pilu/fresh", # used to rebuild if source changed while running
+  "github.com/chmouel/fresh", # used to rebuild if source changed while running
 ]
 
 ignored = [

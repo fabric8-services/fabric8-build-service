@@ -206,7 +206,7 @@ format-go-code: prebuild-check ## Formats any go file that differs from gofmt's 
 # support for running in dev mode
 # -------------------------------------------------------------------
 $(FRESH_BIN): $(VENDOR_DIR)
-	cd $(VENDOR_DIR)/github.com/pilu/fresh && go build -v
+	cd $(VENDOR_DIR)/github.com/chmouel/fresh && go build -v
 
 # -------------------------------------------------------------------
 # support for generating goa code
