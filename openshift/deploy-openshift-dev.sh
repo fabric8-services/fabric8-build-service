@@ -48,6 +48,7 @@ function deploy_sideservice() {
     oc new-app --name="${name}" ${env_dbs} -e AUTH_DEVELOPER_MODE_ENABLED=true \
        ${image}
     sleep 2
+    oc delete route/${name} || true
     oc expose service/${name}
 }
 
