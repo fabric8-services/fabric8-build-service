@@ -89,10 +89,7 @@ build-linux: prebuild-check deps generate ## Builds the Linux binary for the con
 
 .PHONY: image
 image: clean-artifacts build-linux ## Build the docker image
-	docker build -t $(REGISTRY_URL_IMAGE) \
-	  --build-arg BUILD_DIR=$(BUILD_DIR)\
-	  --build-arg PROJECT_NAME=$(PROJECT_NAME)\
-	  -f $(DOCKERFILE) .
+	docker build -t $(REGISTRY_URL_IMAGE) -f $(DOCKERFILE) .
 
 # -------------------------------------------------------------------
 # Unittest

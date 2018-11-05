@@ -5,14 +5,22 @@ FROM quay.io/openshiftio/rhel-base-pcp:latest
 LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Devtools <devtools@redhat.com>"
 
-EXPOSE 8080
-ARG BUILD_DIR
-ARG PROJECT_NAME
-COPY ${BUILD_DIR}/${PROJECT_NAME} /usr/local/bin/${PROJECT_NAME}
+ENV LANG=en_US.utf8
+ENV F8_INSTALL_PREFIX=/usr/local/build
 
-ENV F8_USER_NAME=fabric8
+# Create a non-root user and a group with the same name: "build"
+ENV F8_USER_NAME=build
 RUN useradd --no-create-home -s /bin/bash ${F8_USER_NAME}
-# From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
+
+# Expose promotheus envs
+COPY .make/pcp/fabric8-build+pmcd.sh /fabric8-build+pmcd.sh
+EXPOSE 44321
+
+COPY bin/fabric8-build ${F8_INSTALL_PREFIX}/bin/fabric8-build
+
 USER ${F8_USER_NAME}
 
-ENTRYPOINT [ "${PROJECT_NAME}" ]
+WORKDIR ${F8_INSTALL_PREFIX}
+ENTRYPOINT [ "/fabric8-build+pmcd.sh" ]
+
+EXPOSE 8080
