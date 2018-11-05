@@ -1,6 +1,11 @@
 #!/bin/bash
 # Deploy a fully working fabric8-build on an openshift cluster
 #
+# You can do this directly on minishift or on a remote cluster
+#
+# TODO(chmouel): add an option to not clean up DB datas
+# This is for dev, everyting get cleaned up again and again
+#
 # Configuration is inside makefile
 
 set -ex
@@ -42,6 +47,8 @@ function deploy_sideservice() {
     sleep 2
     oc new-app --name="${name}" ${env_dbs} -e AUTH_DEVELOPER_MODE_ENABLED=true \
        ${image}
+    sleep 2
+    oc expose service/${name}
 }
 
 function deploy_app() {
@@ -70,10 +77,13 @@ function deploy_app() {
     oc expose service/f8build
 }
 
+# TODO(chmouel): one db for all
+# DBS
 deploy_db db
 deploy_db ${AUTH_DB_CONTAINER_NAME}
 deploy_db ${ENV_DB_CONTAINER_NAME}
 
+# AUTH
 AUTH_SERVICE_VARIABLES=$(cat <<EOF
 -e AUTH_LOG_LEVEL=debug
 -e AUTH_POSTGRES_HOST=${AUTH_DB_CONTAINER_NAME}
@@ -82,6 +92,7 @@ EOF
 )
 deploy_sideservice ${AUTH_CONTAINER_NAME} ${AUTH_CONTAINER_IMAGE} "${AUTH_SERVICE_VARIABLES}"
 
+# ENV
 ENV_SERVICE_VARIABLES=$(cat <<EOF
 -e F8_LOG_LEVEL=debug
 -e F8_POSTGRES_HOST=${ENV_DB_CONTAINER_NAME}
@@ -90,6 +101,6 @@ ENV_SERVICE_VARIABLES=$(cat <<EOF
 EOF
 )
 deploy_sideservice ${ENV_CONTAINER_NAME} ${ENV_CONTAINER_IMAGE} "${ENV_SERVICE_VARIABLES}"
-oc expose service/${ENV_CONTAINER_NAME}
 
+# Build
 deploy_app
