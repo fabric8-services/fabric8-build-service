@@ -11,18 +11,26 @@ DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -
 ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
-# Postgres Container
+# DB Container
 DB_CONTAINER_NAME = db-build
 DB_CONTAINER_PORT = 5433
 DB_CONTAINER_IMAGE = registry.centos.org/postgresql/postgresql:9.6
 
-AUTH_DB_CONTAINER_NAME = db-auth
-AUTH_DB_CONTAINER_PORT = 5434
-AUTH_DB_CONTAINER_IMAGE = $(DB_CONTAINER_IMAGE)
-
+# Auth
 AUTH_CONTAINER_NAME = auth
 AUTH_CONTAINER_PORT = 8089
 AUTH_CONTAINER_IMAGE = quay.io/openshiftio/fabric8-services-fabric8-auth:latest
+
+AUTH_DB_CONTAINER_NAME = db-auth
+AUTH_DB_CONTAINER_IMAGE = $(DB_CONTAINER_IMAGE)
+
+# Env
+ENV_CONTAINER_NAME = f8env
+ENV_CONTAINER_PORT = 8080
+ENV_CONTAINER_IMAGE = quay.io/openshiftio/fabric8-services-fabric8-env:latest
+
+ENV_DB_CONTAINER_NAME = db-env
+ENV_DB_CONTAINER_IMAGE = $(DB_CONTAINER_IMAGE)
 
 # By default reduce the amount of log output from tests
 F8_LOG_LEVEL ?= error
