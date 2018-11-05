@@ -45,8 +45,7 @@ function deploy_sideservice() {
     oc new-app --name="${name}" ${image} -o yaml | \
         oc delete ${FORCE_DELETE_VARS} -f- 2>/dev/null || true
     sleep 2
-    oc new-app --name="${name}" ${env_dbs} -e AUTH_DEVELOPER_MODE_ENABLED=true \
-       ${image}
+    oc new-app --name="${name}" ${env_dbs} -e ${image}
     sleep 2
     oc delete route/${name} || true
     oc expose service/${name}
@@ -89,6 +88,7 @@ AUTH_SERVICE_VARIABLES=$(cat <<EOF
 -e AUTH_LOG_LEVEL=debug
 -e AUTH_POSTGRES_HOST=${AUTH_DB_CONTAINER_NAME}
 -e AUTH_POSTGRES_PORT=5432
+-e AUTH_DEVELOPER_MODE_ENABLED=true
 EOF
 )
 deploy_sideservice ${AUTH_CONTAINER_NAME} ${AUTH_CONTAINER_IMAGE} "${AUTH_SERVICE_VARIABLES}"
@@ -98,6 +98,7 @@ ENV_SERVICE_VARIABLES=$(cat <<EOF
 -e F8_LOG_LEVEL=debug
 -e F8_POSTGRES_HOST=${ENV_DB_CONTAINER_NAME}
 -e F8_POSTGRES_PORT=5432
+-e F8_DEVELOPER_MODE_ENABLED=true
 -e F8_AUTH_URL=http://${AUTH_CONTAINER_NAME}:${AUTH_CONTAINER_PORT}
 EOF
 )
