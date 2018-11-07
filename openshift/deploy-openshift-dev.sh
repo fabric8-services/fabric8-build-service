@@ -45,7 +45,7 @@ function deploy_sideservice() {
     oc new-app --name="${name}" ${image} -o yaml | \
         oc delete ${FORCE_DELETE_VARS} -f- 2>/dev/null || true
     sleep 2
-    oc new-app --name="${name}" ${env_dbs} -e ${image}
+    oc new-app --name="${name}" ${env_dbs} ${image}
     sleep 2
     oc delete route/${name} || true
     oc expose service/${name}
