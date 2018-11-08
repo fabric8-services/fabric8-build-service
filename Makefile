@@ -12,7 +12,7 @@ ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
 # by default use docker for compatibily and buildah/podman on Linux
-CONTAINER_BUILD := docker
+CONTAINER_BUILD := "docker build"
 CONTAINER_RUN := docker
 
 # DB Container
