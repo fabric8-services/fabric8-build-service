@@ -11,6 +11,10 @@ DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -
 ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
+# by default use docker for compatibily and buildah/podman on Linux
+CONTAINER_BUILD := docker
+CONTAINER_RUN := docker
+
 # DB Container
 DB_CONTAINER_NAME = db-build
 DB_CONTAINER_PORT = 5433
@@ -37,9 +41,7 @@ F8_LOG_LEVEL ?= error
 
 # declares variable that are OS-sensitive
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-ifeq ($(OS),Windows_NT)
-include $(SELF_DIR)/.make/Makefile.win
-else
+ifeq ($(OS),Linux)
 include $(SELF_DIR)/.make/Makefile.lnx
 endif
 
@@ -65,7 +67,7 @@ define log-info =
 endef
 
 # -------------------------------------------------------------------
-# Docker build
+# Container build
 # -------------------------------------------------------------------
 BUILD_DIR = bin
 REGISTRY_URI = quay.io
@@ -74,10 +76,10 @@ REGISTRY_IMAGE = ${PROJECT_NAME}
 
 ifeq ($(TARGET),rhel)
 	REGISTRY_URL_IMAGE := ${REGISTRY_URI}/openshiftio/rhel-${REGISTRY_NS}-${REGISTRY_IMAGE}
-	DOCKERFILE := ./.make/Dockerfile.rhel
+	CONTAINERFILE := ./.make/Dockerfile.rhel
 else
 	REGISTRY_URL_IMAGE := ${REGISTRY_URI}/openshiftio/${REGISTRY_NS}-${REGISTRY_IMAGE}
-	DOCKERFILE := ./.make/Dockerfile
+	CONTAINERFILE := ./.make/Dockerfile
 endif
 
 $(BUILD_DIR):
@@ -88,14 +90,14 @@ build-linux: prebuild-check deps generate ## Builds the Linux binary for the con
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -v $(LDFLAGS) -o $(BUILD_DIR)/$(PROJECT_NAME)
 
 .PHONY: image
-image: clean-artifacts build-linux ## Build the docker image
-	docker build -t $(REGISTRY_URL_IMAGE) -f $(DOCKERFILE) .
+image: clean-artifacts build-linux ## Build the container image
+	$(CONTAINER_BUILD) build -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
 
 # -------------------------------------------------------------------
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check $(SOURCES) docker-run generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check $(SOURCES) container-run generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	F8_POSTGRES_PORT="$(DB_CONTAINER_PORT)" \
@@ -281,11 +283,7 @@ dev: prebuild-check deps generate $(FRESH_BIN)  ## run the server locally
 # -------------------------------------------------------------------
 .PHONY: build
 build: prebuild-check deps generate ## Build the server
-ifeq ($(OS),Windows_NT)
-	go build -v $(LDFLAGS) -o "$(shell cygpath --windows '$(BINARY_SERVER_BIN)')"
-else
 	go build -v $(LDFLAGS) -o $(BINARY_SERVER_BIN)
-endif
 
 # Pack all migration SQL files into a compilable Go file
 migration/sqlbindata.go: $(GO_BINDATA_BIN) $(wildcard migration/sql-files/*.sql)
@@ -317,23 +315,23 @@ print-env:
 	$(foreach var,$(.VARIABLES),$(info $(var)="$($(var))"))
 
 # -----------------------------
-# Run into docker for unitests
+# Run into a container for unitests
 # -----------------------------
-.PHONY: docker-run
-docker-run: docker-run-local-postgres ## Runs all the docker images
+.PHONY: container-run
+container-run: container-run-local-postgres ## Runs all the container images
 
-.PHONY: docker-run-local-postgres
-docker-run-local-postgres: docker-clean-postgres ## Runs db with Docker
+.PHONY: container-run-local-postgres
+container-run-local-postgres: container-clean-postgres ## Runs db in container
 	$(info >>--- Starting container $(DB_CONTAINER_NAME) ---<<)
-	 @[[ "$(docker ps -q --filter "name=$(DB_CONTAINER_NAME)")xxx" == xxx ]] && \
-		docker run --name $(DB_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
+	 @[[ "`$(CONTAINER_RUN) ps -q --filter 'name=$(DB_CONTAINER_NAME)'`xxx" == xxx ]] && \
+		$(CONTAINER_RUN) run --name $(DB_CONTAINER_NAME) -e POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml` \
 		 -d -p $(DB_CONTAINER_PORT):5432 $(DB_CONTAINER_IMAGE) >/dev/null
 	sleep 2 # sleep for a bit that it started
 
-.PHONY: docker-clean-postgres
-docker-clean-postgres:
+.PHONY: container-clean-postgres
+container-clean-postgres:
 	$(info >>--- Stopping container $(DB_CONTAINER_NAME) ---<<)
-	@docker rm -f $(DB_CONTAINER_NAME) 2>/dev/null || true
+	@$(CONTAINER_RUN) rm -f $(DB_CONTAINER_NAME) 2>/dev/null || true
 
 .PHONY: deploy-openshift-dev
 deploy-openshift-dev: ## Deploy to an (already running) openshift environement
