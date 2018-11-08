@@ -15,3 +15,5 @@ GO_BIN_NAME:=go
 DEP_BIN_NAME:=dep
 CHECK_GOPATH_BIN:=$(INSTALL_PREFIX)/check_gopath
 UNAME_S:=$(shell uname -s)
+CONTAINER_BUILD = buildah
+CONTAINER_RUN = podman

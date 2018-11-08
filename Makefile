@@ -41,7 +41,8 @@ F8_LOG_LEVEL ?= error
 
 # declares variable that are OS-sensitive
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
-ifeq ($(OS),Linux)
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
 include $(SELF_DIR)/.make/Makefile.lnx
 endif
 

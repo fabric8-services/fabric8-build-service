@@ -40,8 +40,7 @@ function setup() {
     # We need to disable selinux for now, XXX
     /usr/sbin/setenforce 0 || :
 
-    yum -y install docker make golang git
-    service docker start
+    yum -y install buildah podman make golang git
 
     mkdir -p $(dirname ${REPO_PATH})
     cp -a ${HOME}/payload ${REPO_PATH}
@@ -54,21 +53,14 @@ function tag_push() {
     local image="$1"
     local tag="$2"
 
-    docker tag ${image}:latest ${image}:${tag}
-    docker push ${image}:${tag}
+    buildah tag ${image}:latest ${image}:${tag}
+    buildah push --creds "${QUAY_USERNAME}:${QUAY_PASSWORD}" ${image}:${tag}
 }
 
 
 function _deploy() {
   # Login first
   cd ${REPO_PATH}
-
-
-  if [ -n "${QUAY_USERNAME}" -a -n "${QUAY_PASSWORD}" ]; then
-    docker login -u ${QUAY_USERNAME} -p ${QUAY_PASSWORD} ${REGISTRY}
-  else
-    echo "Could not login, missing credentials for the registry"
-  fi
 
   # Build fabric8-build
   make image
@@ -92,7 +84,7 @@ function deploy() {
     set -e
 
     if [[ -n ${fail} ]];then
-		echo "We need to tell someone this has fail"
+		echo "We need to find a way to notify that something has failed"
     fi
 }
 
@@ -124,7 +116,7 @@ function dotest() {
     cd ${REPO_PATH}
     make build
 
-    make docker-run
+    make container-run
 
     check_up postgres-build 127.0.0.1 5433
 
