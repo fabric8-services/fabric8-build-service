@@ -54,7 +54,7 @@ function tag_push() {
     local tag="$2"
 
     buildah tag ${image}:latest ${image}:${tag}
-    buildah push --creds "${QUAY_USERNAME}:${QUAY_PASSWORD}" ${image}:${tag} docker-daemon:${image}:${tag}
+    buildah push --creds "${QUAY_USERNAME}:${QUAY_PASSWORD}" ${image}:${tag} ${image}:${tag}
 }
 
 
