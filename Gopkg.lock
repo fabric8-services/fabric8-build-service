@@ -84,9 +84,11 @@
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
+    "convert",
     "errors",
     "goasupport/jsonapi_errors_helpers",
     "goasupport/status",
+    "gormsupport",
     "log",
     "metric",
     "migration",
@@ -405,7 +407,8 @@
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
-    "require"
+    "require",
+    "suite"
   ]
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
@@ -486,6 +489,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f79cb9b05d55766d93f04fbe92f9c9639fac6e6bbec6e949b8bcffcd8e1795b6"
+  inputs-digest = "9f44b05aa3df5948aa8842be0f980c79440a988885f13277c9e92750c7f3a8b8"
   solver-name = "gps-cdcl"
   solver-version = 1

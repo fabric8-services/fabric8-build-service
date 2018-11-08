@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/fabric8-services/fabric8-build/configuration"
 	"github.com/fabric8-services/fabric8-common/gormsupport"
 	"github.com/fabric8-services/fabric8-common/resource"
 
@@ -15,9 +16,10 @@ import (
 )
 
 const (
-	dbName      = "test"
-	defaultHost = "localhost"
-	defaultPort = "5436"
+	dbName          = "test"
+	defaultHost     = "localhost"
+	defaultPort     = "5436"
+	defaultPassword = "mysecretpassword"
 )
 
 type MigrationTestSuite struct {
@@ -29,9 +31,10 @@ const (
 )
 
 var (
-	sqlDB *sql.DB
-	host  string
-	port  string
+	sqlDB    *sql.DB
+	host     string
+	port     string
+	password string
 )
 
 func TestMigration(t *testing.T) {
@@ -40,6 +43,16 @@ func TestMigration(t *testing.T) {
 
 func (s *MigrationTestSuite) SetupTest() {
 	resource.Require(s.T(), resource.Database)
+
+	cfg, err := configuration.New("../config.yaml")
+	if err != nil {
+		panic(fmt.Errorf("Failed to setup the configuration: %s", err.Error()))
+	}
+
+	password = cfg.GetPostgresPassword()
+	if password == "" {
+		password = defaultPassword
+	}
 
 	host = os.Getenv("F8_POSTGRES_HOST")
 	if host == "" {
@@ -50,7 +63,9 @@ func (s *MigrationTestSuite) SetupTest() {
 		port = defaultPort
 	}
 
-	dbConfig := fmt.Sprintf("host=%s port=%s user=postgres password=mysecretpassword sslmode=disable connect_timeout=5", host, port)
+	dbConfig := fmt.Sprintf(
+		"host=%s port=%s user=postgres password=%s sslmode=disable connect_timeout=5",
+		host, port, password)
 
 	db, err := sql.Open("postgres", dbConfig)
 	require.NoError(s.T(), err, "cannot connect to database: %s", dbName)
@@ -66,8 +81,8 @@ func (s *MigrationTestSuite) SetupTest() {
 }
 
 func (s *MigrationTestSuite) TestMigrate() {
-	dbConfig := fmt.Sprintf("host=%s port=%s user=postgres password=mysecretpassword dbname=%s sslmode=disable connect_timeout=5",
-		host, port, dbName)
+	dbConfig := fmt.Sprintf("host=%s port=%s user=postgres password=%s dbname=%s sslmode=disable connect_timeout=5",
+		host, port, password, dbName)
 	var err error
 	sqlDB, err = sql.Open("postgres", dbConfig)
 	require.NoError(s.T(), err, "cannot connect to DB '%s'", dbName)
