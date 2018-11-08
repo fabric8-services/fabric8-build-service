@@ -11,8 +11,24 @@ DESIGNS := $(shell find $(SOURCE_DIR)/$(DESIGN_DIR) -path $(SOURCE_DIR)/vendor -
 ALL_PKGS_EXCLUDE_PATTERN = 'vendor\|app\|tool\/cli\|design\|client\|test'
 LDFLAGS=-ldflags "-X ${PACKAGE_NAME}/app.Commit=${COMMIT} -X ${PACKAGE_NAME}/app.BuildTime=${BUILD_TIME}"
 
+# Paths common between OS
+BINARY_SERVER_BIN=$(INSTALL_PREFIX)/fabric8-build
+GOAGEN_BIN=$(VENDOR_DIR)/github.com/goadesign/goa/goagen/goagen
+GO_BINDATA_DIR=$(VENDOR_DIR)/github.com/jteeuwen/go-bindata/go-bindata/
+GO_BINDATA_BIN=$(GO_BINDATA_DIR)/go-bindata
+FRESH_BIN=$(VENDOR_DIR)/github.com/chmouel/fresh/fresh
+EXTRA_PATH=$(shell dirname $(GO_BINDATA_BIN))
+GOCOV_BIN=$(VENDOR_DIR)/github.com/axw/gocov/gocov/gocov
+GOCOVMERGE_BIN=$(VENDOR_DIR)/github.com/wadey/gocovmerge/gocovmerge
+GOLINT_DIR=$(VENDOR_DIR)/github.com/golang/lint/golint
+GOLINT_BIN=$(GOLINT_DIR)/golint
+GOCYCLO_DIR=$(VENDOR_DIR)/github.com/fzipp/gocyclo
+GOCYCLO_BIN=$(GOCYCLO_DIR)/gocyclo
+GIT_BIN_NAME:=git
+GO_BIN_NAME:=go
+DEP_BIN_NAME:=dep
+
 # by default use docker for compatibily and buildah/podman on Linux
-CONTAINER_BUILD := "docker build"
 CONTAINER_RUN := docker
 
 # DB Container
@@ -92,7 +108,12 @@ build-linux: prebuild-check deps generate ## Builds the Linux binary for the con
 
 .PHONY: image
 image: clean-artifacts build-linux ## Build the container image
-	$(CONTAINER_BUILD) build -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
+ifeq ($(UNAME_S),Linux)
+		buildah bud -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
+else
+		docker build -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
+endif
+
 
 # -------------------------------------------------------------------
 # Unittest
