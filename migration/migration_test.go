@@ -1,48 +1,80 @@
-package migration
+package migration_test
 
 import (
 	"database/sql"
 	"fmt"
-	"sync"
+	"os"
 	"testing"
 
+	"github.com/fabric8-services/fabric8-common/gormsupport"
 	"github.com/fabric8-services/fabric8-common/resource"
-	_ "github.com/lib/pq"
-	"github.com/stretchr/testify/assert"
 
-	config "github.com/fabric8-services/fabric8-build/configuration"
+	"github.com/jinzhu/gorm"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// fail - as t.Fatalf() is not goroutine safe, this function behaves like t.Fatalf().
-func fail(t *testing.T, template string, args ...interface{}) {
-	fmt.Printf(template, args...)
-	fmt.Println()
-	t.Fail()
+const (
+	dbName      = "test"
+	defaultHost = "localhost"
+	defaultPort = "5436"
+)
+
+type MigrationTestSuite struct {
+	suite.Suite
 }
 
-func TestConcurrentMigrations(t *testing.T) {
-	resource.Require(t, resource.Database)
+const (
+	databaseName = "test"
+)
 
-	configuration, err := config.New("../config.yaml")
-	if err != nil {
-		panic(fmt.Errorf("Failed to setup the configuration: %s", err.Error()))
+var (
+	sqlDB *sql.DB
+	host  string
+	port  string
+)
+
+func TestMigration(t *testing.T) {
+	suite.Run(t, new(MigrationTestSuite))
+}
+
+func (s *MigrationTestSuite) SetupTest() {
+	resource.Require(s.T(), resource.Database)
+
+	host = os.Getenv("F8_POSTGRES_HOST")
+	if host == "" {
+		host = defaultHost
+	}
+	port = os.Getenv("F8_POSTGRES_PORT")
+	if port == "" {
+		port = defaultPort
 	}
 
-	var wg sync.WaitGroup
+	dbConfig := fmt.Sprintf("host=%s port=%s user=postgres password=mysecretpassword sslmode=disable connect_timeout=5", host, port)
 
-	for i := 0; i < 20; i++ {
-		wg.Add(1)
+	db, err := sql.Open("postgres", dbConfig)
+	require.NoError(s.T(), err, "cannot connect to database: %s", dbName)
+	defer db.Close()
 
-		go func() {
-			defer wg.Done()
-			db, err := sql.Open("postgres", configuration.GetPostgresConfigString())
-			if err != nil {
-				fail(t, "Cannot connect to DB: %s\n", err)
-			}
-			err = Migrate(db, configuration.GetPostgresDatabase())
-			assert.Nil(t, err)
-		}()
-
+	_, err = db.Exec("DROP DATABASE IF EXISTS " + dbName)
+	if err != nil && !gormsupport.IsInvalidCatalogName(err) {
+		require.NoError(s.T(), err, "failed to drop database '%s'", dbName)
 	}
-	wg.Wait()
+
+	_, err = db.Exec("CREATE DATABASE " + dbName)
+	require.NoError(s.T(), err, "failed to create database '%s'", dbName)
+}
+
+func (s *MigrationTestSuite) TestMigrate() {
+	dbConfig := fmt.Sprintf("host=%s port=%s user=postgres password=mysecretpassword dbname=%s sslmode=disable connect_timeout=5",
+		host, port, dbName)
+	var err error
+	sqlDB, err = sql.Open("postgres", dbConfig)
+	require.NoError(s.T(), err, "cannot connect to DB '%s'", dbName)
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("postgres", dbConfig)
+	require.NoError(s.T(), err, "cannot connect to DB '%s'", dbName)
+	defer gormDB.Close()
+	// TODO
 }

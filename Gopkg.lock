@@ -89,10 +89,11 @@
     "goasupport/status",
     "log",
     "metric",
+    "migration",
     "resource",
     "sentry"
   ]
-  revision = "51e44b47e514721ddaa3fca99e5fb5bc1a6e7eb2"
+  revision = "45960af9689499e9f5e5a4ebd142a8189a19ca1e"
 
 [[projects]]
   branch = "revert-562-log_update_req"
@@ -485,6 +486,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "960235e3c11951513aa0529f68f288299f53da264a0fdc58aaaea539b2f30e69"
+  inputs-digest = "f79cb9b05d55766d93f04fbe92f9c9639fac6e6bbec6e949b8bcffcd8e1795b6"
   solver-name = "gps-cdcl"
   solver-version = 1
