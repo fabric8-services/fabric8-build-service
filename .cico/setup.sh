@@ -57,8 +57,7 @@ function tag_push() {
     buildah push --creds "${QUAY_USERNAME}:${QUAY_PASSWORD}" ${image}:${tag} ${image}:${tag}
 }
 
-
-function _deploy() {
+function deploy() {
   # Login first
   cd ${REPO_PATH}
 
@@ -75,17 +74,6 @@ function _deploy() {
   fi
 
   echo 'CICO: Image pushed, ready to update deployed app'
-}
-
-
-function deploy() {
-    set +e
-    _deploy || fail=true
-    set -e
-
-    if [[ -n ${fail} ]];then
-		echo "We need to find a way to notify that something has failed"
-    fi
 }
 
 function check_up() {
