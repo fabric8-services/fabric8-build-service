@@ -54,12 +54,19 @@ function tag_push() {
     local tag="$2"
 
     buildah tag ${image}:latest ${image}:${tag}
-    buildah push --creds "${QUAY_USERNAME}:${QUAY_PASSWORD}" ${image}:${tag} ${image}:${tag}
+    buildah push ${image}:${tag} ${image}:${tag}
 }
 
 function deploy() {
   # Login first
   cd ${REPO_PATH}
+
+  if [ -n "${QUAY_USERNAME}" -a -n "${QUAY_PASSWORD}" ]; then
+      podman login -u ${QUAY_USERNAME} -p ${QUAY_PASSWORD} ${REGISTRY}
+  else
+      echo "Could not login, missing credentials for the registry"
+      exit 1
+  fi
 
   # Build fabric8-build
   make image
