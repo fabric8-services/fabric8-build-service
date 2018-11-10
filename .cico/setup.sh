@@ -113,7 +113,10 @@ function dotest() {
 
     make container-run
 
-    check_up postgres-build 127.0.0.1 5433
+    eval $(make print-env|grep '^DB_CONTAINER_PORT')
+    export F8_POSTGRES_PORT="${DB_CONTAINER_PORT}"
+
+    check_up postgres-build 127.0.0.1 ${DB_CONTAINER_PORT}
 
     make test-unit
 

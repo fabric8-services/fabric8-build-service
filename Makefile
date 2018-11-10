@@ -119,10 +119,9 @@ endif
 # Unittest
 # -------------------------------------------------------------------
 .PHONY: test-unit
-test-unit: prebuild-check $(SOURCES) container-run generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
+test-unit: prebuild-check $(SOURCES) generate ## Runs the unit tests and WITHOUT producing coverage files for each package.
 	$(call log-info,"Running test: $@")
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
-	F8_POSTGRES_PORT="$(DB_CONTAINER_PORT)" \
 	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_LOG_LEVEL=$(F8_LOG_LEVEL) \
 	go test -v $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
