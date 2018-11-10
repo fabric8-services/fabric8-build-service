@@ -15,6 +15,7 @@ type Scripts [][]string
 func Steps() Scripts {
 	return [][]string{
 		{"000-bootstrap.sql"},
+		{"001-pipelineenv.sql"},
 	}
 }
 

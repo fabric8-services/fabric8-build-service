@@ -7,9 +7,10 @@ import (
 	"testing"
 
 	"github.com/fabric8-services/fabric8-build/configuration"
+	"github.com/fabric8-services/fabric8-build/migration"
 	"github.com/fabric8-services/fabric8-common/gormsupport"
+	migrationsupport "github.com/fabric8-services/fabric8-common/migration"
 	"github.com/fabric8-services/fabric8-common/resource"
-
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -18,7 +19,7 @@ import (
 const (
 	dbName          = "test"
 	defaultHost     = "localhost"
-	defaultPort     = "5436"
+	defaultPort     = "5433"
 	defaultPassword = "mysecretpassword"
 )
 
@@ -91,5 +92,21 @@ func (s *MigrationTestSuite) TestMigrate() {
 	gormDB, err := gorm.Open("postgres", dbConfig)
 	require.NoError(s.T(), err, "cannot connect to DB '%s'", dbName)
 	defer gormDB.Close()
-	// TODO
+	s.T().Run("checkMigration001", checkMigration001)
+}
+
+func checkMigration001(t *testing.T) {
+	err := migrationsupport.Migrate(sqlDB, databaseName, migration.Steps()[:2])
+	require.NoError(t, err)
+
+	pipeline_id := "80654c22-c378-40bc-a76e-33a4bcc45f79"
+	t.Run("insert ok", func(t *testing.T) {
+		_, err := sqlDB.Exec(`INSERT INTO pipelines (id, name, space_id) VALUES ('` +
+			pipeline_id + `', 'pipeline1', uuid_generate_v4())`)
+		require.NoError(t, err)
+		_, err = sqlDB.Exec("INSERT INTO environments (environment_id, pipeline_id) VALUES (uuid_generate_v4(), '" +
+			pipeline_id + "')")
+		require.NoError(t, err)
+
+	})
 }
