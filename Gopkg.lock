@@ -9,6 +9,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/alecthomas/template"
+  packages = [
+    ".",
+    "parse"
+  ]
+  revision = "a0175ee3bccc567396460bf5acd36800cb10c49c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/alecthomas/units"
+  packages = ["."]
+  revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/armon/go-metrics"
   packages = ["."]
   revision = "f0300d1749da6fa982027e449ec0c7a145510c3c"
@@ -71,13 +86,20 @@
   source = "https://github.com/xcoulon/go-vcr/"
 
 [[projects]]
+  branch = "master"
   name = "github.com/fabric8-services/fabric8-auth"
   packages = [
     "design",
     "errors",
     "resource"
   ]
-  revision = "19eb16aaf10758299c4a5360600af983b8470909"
+  revision = "5ee62db0407251e886859cb2681876dfb44f64bb"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/fabric8-services/fabric8-auth-client"
+  packages = ["auth"]
+  revision = "0eb93fc6cee1e202cb0f3ade92e99a2423b49283"
 
 [[projects]]
   branch = "master"
@@ -86,33 +108,40 @@
     "configuration",
     "convert",
     "errors",
+    "goasupport",
     "goasupport/jsonapi_errors_helpers",
     "goasupport/status",
     "gormsupport",
+    "httpsupport",
     "log",
     "metric",
     "migration",
     "resource",
-    "sentry"
+    "sentry",
+    "test/auth",
+    "test/suite",
+    "token",
+    "token/jwk"
   ]
-  revision = "45960af9689499e9f5e5a4ebd142a8189a19ca1e"
+  revision = "5ebd971fd8c420939fd1b4314d35a619a7080227"
 
 [[projects]]
-  branch = "revert-562-log_update_req"
+  branch = "master"
   name = "github.com/fabric8-services/fabric8-tenant"
-  packages = ["test"]
-  revision = "3c4271cb6860eb746806840826720d7dfc01c552"
+  packages = [
+    "configuration",
+    "test"
+  ]
+  revision = "61661dc89c026fcd02819347c1f4c813273c4f4b"
 
 [[projects]]
   branch = "master"
   name = "github.com/fabric8-services/fabric8-wit"
   packages = [
-    "configuration",
     "errors",
-    "log",
     "rest"
   ]
-  revision = "8674b7b56a9226b3bbd6ebf7b0179f127ff6a0a2"
+  revision = "52056663d8fadbaa85425a9690f11e65acee7d24"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -337,9 +366,10 @@
   packages = [
     "expfmt",
     "internal/bitbucket.org/ww/goautoneg",
+    "log",
     "model"
   ]
-  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+  revision = "41aa239b4cce3c56ab88fc366ae8b0a6423fa239"
 
 [[projects]]
   branch = "master"
@@ -376,8 +406,8 @@
 [[projects]]
   name = "github.com/spf13/cast"
   packages = ["."]
-  revision = "8965335b8c7107321228e3e3702cab9832751bac"
-  version = "v1.2.0"
+  revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
+  version = "v1.3.0"
 
 [[projects]]
   name = "github.com/spf13/cobra"
@@ -434,19 +464,24 @@
     "openpgp/s2k",
     "pbkdf2"
   ]
-  revision = "7c1a557ab941a71c619514f229f0b27ccb0c27cf"
+  revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["websocket"]
-  revision = "146acd28ed5894421fb5aac80ca93bc1b1f46f87"
+  revision = "88d92db4c548972d942ac2a3531a8a9a34c82ca6"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix"]
-  revision = "4497e2df6f9e69048a54498c7affbbec3294ad47"
+  packages = [
+    "unix",
+    "windows",
+    "windows/registry",
+    "windows/svc/eventlog"
+  ]
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -468,7 +503,13 @@
     "cover",
     "go/ast/astutil"
   ]
-  revision = "1f849cf54d09e106002f24257b1cf8b31780c97a"
+  revision = "7e59e591a2617a3067db5fe2fe8e903b4c1b10cc"
+
+[[projects]]
+  name = "gopkg.in/alecthomas/kingpin.v2"
+  packages = ["."]
+  revision = "947dcec5ba9c011838740e680966fd7087a71d0d"
+  version = "v2.2.6"
 
 [[projects]]
   name = "gopkg.in/square/go-jose.v2"
@@ -489,6 +530,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9f44b05aa3df5948aa8842be0f980c79440a988885f13277c9e92750c7f3a8b8"
+  inputs-digest = "875170bc3db9acf07b7ba3ed376fe03211e415b502119778ad37c5275435c8d6"
   solver-name = "gps-cdcl"
   solver-version = 1

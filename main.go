@@ -13,6 +13,7 @@ import (
 	"github.com/fabric8-services/fabric8-build/auth"
 	"github.com/fabric8-services/fabric8-build/configuration"
 	"github.com/fabric8-services/fabric8-build/controller"
+	"github.com/fabric8-services/fabric8-build/gormapp"
 	"github.com/fabric8-services/fabric8-build/migration"
 	"github.com/fabric8-services/fabric8-common/log"
 	"github.com/fabric8-services/fabric8-common/metric"
@@ -141,9 +142,15 @@ func main() {
 
 	// service.Use(metric.Recorder())
 
-	// Mount the 'status controller
+	// Mount the 'status' controller
 	statusCtrl := controller.NewStatusController(service)
 	app.MountStatusController(service, statusCtrl)
+
+	appDB := gormapp.NewGormDB(db)
+
+	// Mount the 'pipeline environment map' controller
+	pipelineEnvCtrl := controller.NewPipelineEnvironmentController(service, appDB)
+	app.MountPipelineEnvironmentsController(service, pipelineEnvCtrl)
 
 	log.Logger().Infoln("Git Commit SHA: ", app.Commit)
 	log.Logger().Infoln("UTC Build Time: ", app.BuildTime)
