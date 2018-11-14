@@ -11,15 +11,19 @@ import (
 )
 
 const (
-	varLogJSON              = "log.json"
-	varLogLevel             = "log.level"
+	defaultLogLevel         = "info"
+	varCleanTestDataEnabled = "clean.test.data"
+	varDBLogsEnabled        = "enable.db.logs"
 	varDeveloperModeEnabled = "developer.mode.enabled"
+	varDiagnoseHTTPAddress  = "diagnose.http.address"
 	varEnvironment          = "environment"
 	varHTTPAddress          = "http.address"
+	varLogJSON              = "log.json"
+	varLogLevel             = "log.level"
 	varMetricsHTTPAddress   = "metrics.http.address"
-	varDiagnoseHTTPAddress  = "diagnose.http.address"
-	defaultLogLevel         = "info"
+	varSentryDSN            = "sentry.dsn"
 
+	// Postgres
 	varPostgresHost                 = "postgres.host"
 	varPostgresPort                 = "postgres.port"
 	varPostgresUser                 = "postgres.user"
@@ -265,4 +269,18 @@ func (c *Config) GetClientSecret() string {
 // to decrypt the cluster tokens stored in auth token mgm
 func (c *Config) GetTokenKey() string {
 	return c.v.GetString(varAuthTokenKey)
+}
+
+// IsCleanTestDataEnabled return true if we want to have clean data enabled
+func (c *Config) IsCleanTestDataEnabled() bool {
+	return c.v.GetBool(varCleanTestDataEnabled)
+}
+
+func (c *Config) GetSentryDSN() string {
+	return c.v.GetString(varSentryDSN)
+}
+
+// Return True if we want to have DB Logs Enabled
+func (c *Config) IsDBLogsEnabled() bool {
+	return c.v.GetBool(varDBLogsEnabled)
 }
