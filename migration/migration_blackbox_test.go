@@ -89,6 +89,9 @@ func (s *MigrationTestSuite) TestMigrate() {
 	require.NoError(s.T(), err, "cannot connect to DB '%s'", dbName)
 	defer sqlDB.Close()
 
+	err = migration.Migrate(sqlDB, "test")
+	require.NoError(s.T(), err)
+
 	gormDB, err := gorm.Open("postgres", dbConfig)
 	require.NoError(s.T(), err, "cannot connect to DB '%s'", dbName)
 	defer gormDB.Close()
