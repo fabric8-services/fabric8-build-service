@@ -34,8 +34,8 @@ func (s *BuildRepositorySuite) SetupSuite() {
 func (s *BuildRepositorySuite) TestCreate() {
 	spaceID := uuid.NewV4()
 	envUUID := uuid.NewV4()
-	newPipeline := newPipeline("pipeline1", spaceID, envUUID)
-	ppl, err := s.buildRepo.Create(context.Background(), newPipeline)
+	np := newPipeline("pipeline1", spaceID, envUUID)
+	ppl, err := s.buildRepo.Create(context.Background(), np)
 
 	require.NoError(s.T(), err)
 	require.NotNil(s.T(), ppl)
@@ -43,6 +43,20 @@ func (s *BuildRepositorySuite) TestCreate() {
 	// Test that auto associations is done
 	assert.Equal(s.T(), 1, len(ppl.Environment))
 	assert.Equal(s.T(), ppl.ID, ppl.Environment[0].PipelineID)
+
+	// Test unique constraint violation
+	ppl, err = s.buildRepo.Create(context.Background(), np)
+	require.Error(s.T(), err)
+	require.Nil(s.T(), ppl)
+	assert.Regexp(s.T(), ".*duplicate key value violates unique constraint.*", err.Error())
+
+	// Test empty name is a failure
+	npe := &build.Pipeline{}
+	ppl, err = s.buildRepo.Create(context.Background(), npe)
+	require.Error(s.T(), err)
+	require.EqualError(s.T(), err, "pq: null value in column \"name\" violates not-null constraint")
+	require.Nil(s.T(), ppl)
+
 }
 
 func newPipeline(name string, spaceID, envUUID uuid.UUID) *build.Pipeline {
