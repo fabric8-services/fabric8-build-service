@@ -118,6 +118,8 @@ function dotest() {
 
     check_up postgres-build 127.0.0.1 ${DB_CONTAINER_PORT}
 
+	./bin/fabric8-build -migrateDatabase
+
     make test-unit
 
     make analyze-go-code
