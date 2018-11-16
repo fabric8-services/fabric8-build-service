@@ -86,10 +86,12 @@ func getMainConfigFile() string {
 func (c *Config) setConfigDefaults() {
 	c.v.SetTypeByDefaultValue(true)
 
-	c.v.SetDefault(varDeveloperModeEnabled, false)
 	c.v.SetDefault(varLogLevel, defaultLogLevel)
 	c.v.SetDefault(varHTTPAddress, "0.0.0.0:8080")
 	c.v.SetDefault(varMetricsHTTPAddress, "0.0.0.0:8080")
+	c.v.SetDefault(varDeveloperModeEnabled, false)
+	c.v.SetDefault(varCleanTestDataEnabled, true)
+	c.v.SetDefault(varDBLogsEnabled, false)
 
 	//---------
 	// Postgres

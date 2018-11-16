@@ -87,25 +87,25 @@ func (s *PipelineEnvironmentControllerSuite) createPipelineEnvironmentCtrlNoErro
 
 func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 	s.T().Run("ok", func(t *testing.T) {
-		spaceID := uuid.NewV4()
-		envID := uuid.NewV4()
-
-		payload := newPipelineEnvironmentPayload("osio-stage", envID)
-		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx, s.svc, s.ctrl, spaceID, payload)
+		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
+		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx, s.svc, s.ctrl, uuid.NewV4(), payload)
 		assert.NotNil(t, newEnv)
 		assert.NotNil(t, newEnv.Data.ID)
 		assert.NotNil(t, newEnv.Data.Environments[0].EnvUUID)
+	})
 
+	s.T().Run("fail", func(t *testing.T) {
+		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
 		createCtxerr, rw := s.createPipelineEnvironmentCtrlNoErroring()
 		createCtxerr.Payload = payload
 		s.ctrl.Create(createCtxerr)
-		require.Equal(s.T(), 500, rw.Code)
+		require.Equal(t, 500, rw.Code)
 
 		createCtxerr, rw = s.createPipelineEnvironmentCtrlNoErroring()
 		emptyPayload := &app.CreatePipelineEnvironmentsPayload{}
 		createCtxerr.Payload = emptyPayload
 		s.ctrl.Create(createCtxerr)
-		require.Equal(s.T(), 400, rw.Code)
+		require.Equal(t, 400, rw.Code)
 	})
 
 }

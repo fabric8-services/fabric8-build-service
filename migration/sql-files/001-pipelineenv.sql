@@ -12,13 +12,14 @@ CREATE TABLE pipelines (
 
 
 CREATE TABLE environments (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     deleted_at timestamp with time zone,
     environment_id uuid NOT NULL,
     pipeline_id uuid,
     FOREIGN KEY (pipeline_id) REFERENCES pipelines(id),
-    PRIMARY KEY (environment_id, pipeline_id)
+    PRIMARY KEY(id)
 );
 
 CREATE INDEX environments_environment_id_idx ON environments USING BTREE (environment_id);

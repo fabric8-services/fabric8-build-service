@@ -21,8 +21,8 @@ type Pipeline struct {
 type Environment struct {
 	gormsupport.Lifecycle
 	EnvironmentID *uuid.UUID `sql:"type:uuid"`
-
-	PipelineID uuid.UUID `sql:"type:uuid"`
+	PipelineID    uuid.UUID  `sql:"type:uuid"`
+	ID            uuid.UUID  `sql:"type:uuid default uuid_generate_v4()" gorm:"primary_key"`
 }
 
 type Repository interface {

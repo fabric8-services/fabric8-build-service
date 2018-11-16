@@ -2,6 +2,7 @@ package build_test
 
 import (
 	"context"
+	"log"
 	"testing"
 
 	"github.com/fabric8-services/fabric8-build/configuration"
@@ -29,6 +30,14 @@ func (s *BuildRepositorySuite) SetupSuite() {
 	s.DBTestSuite.SetupSuite()
 
 	s.buildRepo = build.NewRepository(s.DB)
+
+	//TODO(chmouel): really need something better
+	for _, table := range []string{"environments", "pipelines"} {
+		_, err := s.DB.DB().Exec("DELETE FROM " + table + " CASCADE")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func (s *BuildRepositorySuite) TestCreate() {
