@@ -103,7 +103,7 @@ $(BUILD_DIR):
 	mkdir $(BUILD_DIR)
 
 .PHONY: build-linux $(BUILD_DIR)
-build-linux: prebuild-check deps generate ## Builds the Linux binary for the container image into bin/ folder
+build-linux: prebuild-check deps generate
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -v $(LDFLAGS) -o $(BUILD_DIR)/$(PROJECT_NAME)
 
 .PHONY: image
@@ -325,9 +325,13 @@ app/controllers.go: $(DESIGNS) $(GOAGEN_BIN) $(VENDOR_DIR)
 		--pkg-path=github.com/fabric8-services/fabric8-common/goasupport/jsonapi_errors_helpers --out app
 	$(GOAGEN_BIN) client -d github.com/fabric8-services/fabric8-auth/design --notool --out auth --pkg client
 
+
+.PHONY: migrate-database
+migrate-database: $(BINARY_SERVER_BIN) ## Compiles the server and runs the database migration with it
+	$(BINARY_SERVER_BIN) -migrateDatabase
+
 .PHONY: generate
-## Generate GOA sources. Only necessary after clean of if changed `design` folder.
-generate: app/controllers.go migration/sqlbindata.go
+generate: app/controllers.go migration/sqlbindata.go ## Generate GOA sources. Only necessary after clean of if changed `design` folder.
 
 .PHONY: regenerate
 regenerate: clean-generated generate ## Runs the "clean-generated" and the "generate" target

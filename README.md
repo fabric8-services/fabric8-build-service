@@ -46,6 +46,12 @@ and this will deploy the services :
 
 ### RUNNING
 
+* You need to make sure your database is populated, you can do it like so :
+
+` make migrate-database`
+
+This will run all the sql files from [migration/sql-files/*](migration/sql-files/)
+
 * You need to have a auth server in the variable F8_AUTH_URL, if you were using the `deploy-openshift-dev.sh` script you can get the public route and expose it directly like this :
 
 `export F8_AUTH_URL="http://$(oc get route auth -o json|jq -r .spec.host)"`
