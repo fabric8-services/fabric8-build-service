@@ -7,7 +7,4 @@ source .cico/setup.sh
 
 setup
 
-# Do the test on deploy if it become too slow separate it to another job i.e: https://git.io/fpCrg
-dotest
-
 deploy

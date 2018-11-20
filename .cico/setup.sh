@@ -44,7 +44,7 @@ function setup() {
 
     mkdir -p $(dirname ${REPO_PATH})
     cp -a ${HOME}/payload ${REPO_PATH}
-    cd ${REPO}
+    cd ${REPO_PATH}
 
     echo 'CICO: Build environment created.'
 }
@@ -107,10 +107,7 @@ function check_up() {
     done
 }
 
-function dotest() {
-    cd ${REPO_PATH}
-    make build
-
+function run_postgres() {
     make container-run
 
     eval $(make print-env|grep '^DB_CONTAINER_PORT')
@@ -119,13 +116,20 @@ function dotest() {
     check_up postgres-build 127.0.0.1 ${DB_CONTAINER_PORT}
 
 	./bin/fabric8-build -migrateDatabase
+}
 
-    make test-unit
+function compile() {
+    make build
+}
 
-    make analyze-go-code
-
+function do_coverage() {
     make coverage
 
     # Upload to codecov
     bash <(curl -s https://codecov.io/bash) -K -X search -f tmp/coverage.out -t 533b56c6-9fec-4ff2-9756-6aea46d46f2b
+}
+
+function do_test() {
+    make test-unit
+    make analyze-go-code
 }
