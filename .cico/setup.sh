@@ -9,22 +9,9 @@ export PATH=$PATH:$GOPATH/bin
 REPO_PATH=${GOPATH}/src/github.com/fabric8-services/fabric8-build
 REGISTRY="quay.io"
 
-function addCommentToPullRequest() {
-    message="$1"
-    pr="$2"
-    project="$3"
-    url="https://api.github.com/repos/${project}/issues/${pr}/comments"
-
-    set +x
-    echo curl -X POST -s -L -H "Authorization: XXXX|base64 --decode)" ${url} -d "{\"body\": \"${message}\"}"
-    curl -X POST -s -L -H "Authorization: token $(echo ${FABRIC8_HUB_TOKEN}|base64 --decode)" ${url} -d "{\"body\": \"${message}\"}"
-    set -x
-}
-
 function setup() {
     if [ -f jenkins-env.json ]; then
         eval "$(./env-toolkit load -f jenkins-env.json \
-                FABRIC8_HUB_TOKEN \
                 ghprbActualCommit \
                 ghprbPullAuthorLogin \
                 ghprbGhRepository \
