@@ -83,7 +83,6 @@
     "recorder"
   ]
   revision = "fd097d581a47517ee36686adfd3153d6f8eca367"
-  source = "https://github.com/xcoulon/go-vcr/"
 
 [[projects]]
   branch = "master"
@@ -96,19 +95,12 @@
   revision = "5ee62db0407251e886859cb2681876dfb44f64bb"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/fabric8-services/fabric8-auth-client"
-  packages = ["auth"]
-  revision = "0eb93fc6cee1e202cb0f3ade92e99a2423b49283"
-
-[[projects]]
-  branch = "master"
   name = "github.com/fabric8-services/fabric8-common"
   packages = [
     "configuration",
     "convert",
     "errors",
-    "goasupport",
+    "goamiddleware",
     "goasupport/jsonapi_errors_helpers",
     "goasupport/status",
     "gormsupport",
@@ -123,7 +115,7 @@
     "token",
     "token/jwk"
   ]
-  revision = "5ebd971fd8c420939fd1b4314d35a619a7080227"
+  revision = "45960af9689499e9f5e5a4ebd142a8189a19ca1e"
 
 [[projects]]
   branch = "master"
@@ -530,6 +522,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "875170bc3db9acf07b7ba3ed376fe03211e415b502119778ad37c5275435c8d6"
+  inputs-digest = "02dfb3760d5617054e220f93e9cd197b483682f02682d3c90591c60f0a5326b4"
   solver-name = "gps-cdcl"
   solver-version = 1

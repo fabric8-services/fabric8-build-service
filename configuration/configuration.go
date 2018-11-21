@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	commonconfig "github.com/fabric8-services/fabric8-common/configuration"
 	errs "github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
@@ -92,7 +93,6 @@ func (c *Config) setConfigDefaults() {
 	c.v.SetDefault(varDeveloperModeEnabled, false)
 	c.v.SetDefault(varCleanTestDataEnabled, true)
 	c.v.SetDefault(varDBLogsEnabled, false)
-
 	//---------
 	// Postgres
 	//---------
@@ -121,6 +121,24 @@ func (c *Config) setConfigDefaults() {
 // e.g. token generation endpoint are enabled
 func (c *Config) DeveloperModeEnabled() bool {
 	return c.v.GetBool(varDeveloperModeEnabled)
+}
+
+func (c *Config) GetDevModePrivateKey() []byte {
+	if c.DeveloperModeEnabled() {
+		return []byte(commonconfig.DevModeRsaPrivateKey)
+	}
+	return nil
+}
+
+// GetAuthServiceUrl returns Auth Service URL
+func (c *Config) GetAuthServiceURL() string {
+	if c.v.IsSet(varAuthURL) {
+		return c.v.GetString(varAuthURL)
+	}
+	if c.DeveloperModeEnabled() {
+		return "https://auth.prod-preview.openshift.io"
+	}
+	return ""
 }
 
 // GetEnvironment returns the current environment application is deployed in

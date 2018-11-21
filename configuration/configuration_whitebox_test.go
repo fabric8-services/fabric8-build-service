@@ -20,6 +20,7 @@ const (
 	envF8LogJSON              = "F8_LOG_JSON"
 	envF8DiagnoseHTTPAddresse = "F8_DIAGNOSE_HTTP_ADDRESS"
 	envF8Environment          = "F8_ENVIRONMENT"
+	envF8AuthURL              = "F8_AUTH_URL"
 )
 
 func init() {
@@ -85,6 +86,22 @@ func TestDeveloperEnabled(t *testing.T) {
 	assert.False(t, cfg.DeveloperModeEnabled())
 
 	os.Setenv(envF8DevMode, realEnvValue)
+}
+
+func TestGetAuthServiceURL(t *testing.T) {
+	resource.Require(t, resource.UnitTest)
+
+	realEnvValue := os.Getenv(envF8AuthURL)
+
+	os.Setenv(envF8AuthURL, "https://test.openshift.io")
+	cfg, _ := New("")
+	assert.Equal(t, "https://test.openshift.io", cfg.GetAuthServiceURL())
+
+	os.Unsetenv(envF8AuthURL)
+	cfg, _ = New("")
+	assert.Equal(t, "http://localhost:8089", cfg.GetAuthServiceURL())
+
+	os.Setenv(envF8AuthURL, realEnvValue)
 }
 
 func TestGetEnvironment(t *testing.T) {

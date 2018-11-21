@@ -59,8 +59,17 @@ func (s *PipelineEnvironmentControllerSuite) SetupSuite() {
 	// TODO(chmouel): change this when we have jwt support,
 	svc := testauth.UnsecuredService("ppl-test1")
 	s.svc = svc
+
+	svc2, err := testauth.ServiceAsUser("ppl-test2", testauth.NewIdentity())
+	require.NoError(s.T(), err)
+	s.svc2 = svc2
+
 	s.ctx = s.svc.Context
+	s.ctx2 = s.svc2.Context
+
 	s.ctrl = controller.NewPipelineEnvironmentController(s.svc, s.db)
+	s.ctrl2 = controller.NewPipelineEnvironmentController(s.svc2, s.db)
+
 }
 
 // createPipelineEnvironmentCtrlNoErroring we do this one manually cause the one from
@@ -77,8 +86,8 @@ func (s *PipelineEnvironmentControllerSuite) createPipelineEnvironmentCtrlNoErro
 	}
 	prms := url.Values{}
 	prms["spaceID"] = []string{fmt.Sprintf("%v", spaceID)}
-	goaCtx := goa.NewContext(goa.WithAction(s.ctx, "PipelineEnvironmentsTest"), rw, req, prms)
-	createCtx, __err := app.NewCreatePipelineEnvironmentsContext(goaCtx, req, s.svc)
+	goaCtx := goa.NewContext(goa.WithAction(s.ctx2, "PipelineEnvironmentsTest"), rw, req, prms)
+	createCtx, __err := app.NewCreatePipelineEnvironmentsContext(goaCtx, req, s.svc2)
 	if __err != nil {
 		panic("invalid test data " + __err.Error()) // bug
 	}
@@ -88,7 +97,7 @@ func (s *PipelineEnvironmentControllerSuite) createPipelineEnvironmentCtrlNoErro
 func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 	s.T().Run("ok", func(t *testing.T) {
 		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
-		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx, s.svc, s.ctrl, uuid.NewV4(), payload)
+		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, uuid.NewV4(), payload)
 		assert.NotNil(t, newEnv)
 		assert.NotNil(t, newEnv.Data.ID)
 		assert.NotNil(t, newEnv.Data.Environments[0].EnvUUID)
@@ -97,15 +106,21 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 	s.T().Run("fail", func(t *testing.T) {
 		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
 
-		response, err := test.CreatePipelineEnvironmentsInternalServerError(t, s.ctx, s.svc, s.ctrl, uuid.NewV4(), payload)
+		response, err := test.CreatePipelineEnvironmentsInternalServerError(t, s.ctx2, s.svc2, s.ctrl2, uuid.NewV4(), payload)
 		require.NotNil(t, response.Header().Get("Location"))
 		assert.Regexp(s.T(), ".*duplicate key value violates unique constraint.*", err.Errors)
 
 		emptyPayload := &app.CreatePipelineEnvironmentsPayload{}
 		createCtxerr, rw := s.createPipelineEnvironmentCtrlNoErroring()
 		createCtxerr.Payload = emptyPayload
-		s.ctrl.Create(createCtxerr)
+		s.ctrl2.Create(createCtxerr)
 		require.Equal(t, 400, rw.Code)
+	})
+
+	s.T().Run("unauthorized", func(t *testing.T) {
+		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
+		_, err := test.CreatePipelineEnvironmentsUnauthorized(t, s.ctx, s.svc, s.ctrl, uuid.NewV4(), payload)
+		assert.NotNil(t, err)
 	})
 
 }

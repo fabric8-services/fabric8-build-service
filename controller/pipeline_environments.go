@@ -8,6 +8,7 @@ import (
 	"github.com/fabric8-services/fabric8-build/build"
 	"github.com/fabric8-services/fabric8-common/errors"
 	"github.com/fabric8-services/fabric8-common/httpsupport"
+	"github.com/fabric8-services/fabric8-common/token"
 	"github.com/goadesign/goa"
 	errs "github.com/pkg/errors"
 	"github.com/prometheus/common/log"
@@ -39,13 +40,22 @@ func checkAndConvertEnvironment(envs []*app.EnvironmentAttributes) (ret []build.
 
 // Create runs the create action.
 func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmentsContext) error {
+	tokenMgr, err := token.ReadManagerFromContext(ctx)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
+	}
+	_, err = tokenMgr.Locate(ctx)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, errors.NewUnauthorizedError(err.Error()))
+	}
+
 	reqPpl := ctx.Payload.Data
 	if reqPpl == nil {
 		return app.JSONErrorResponse(ctx, errors.NewBadParameterError("data", nil).Expected("not nil"))
 	}
 
 	spaceID := ctx.SpaceID
-	err := c.checkSpaceExist(ctx, spaceID.String())
+	err = c.checkSpaceExist(ctx, spaceID.String())
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}

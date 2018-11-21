@@ -15,9 +15,11 @@ import (
 	"github.com/fabric8-services/fabric8-build/controller"
 	"github.com/fabric8-services/fabric8-build/gormapp"
 	"github.com/fabric8-services/fabric8-build/migration"
+	"github.com/fabric8-services/fabric8-common/goamiddleware"
 	"github.com/fabric8-services/fabric8-common/log"
 	"github.com/fabric8-services/fabric8-common/metric"
 	"github.com/fabric8-services/fabric8-common/sentry"
+	"github.com/fabric8-services/fabric8-common/token"
 	"github.com/goadesign/goa"
 	goalogrus "github.com/goadesign/goa/logging/logrus"
 	"github.com/goadesign/goa/middleware"
@@ -132,6 +134,13 @@ func main() {
 	service.Use(gzip.Middleware(9))
 	service.Use(app.ErrorHandler(service, true))
 	service.Use(middleware.Recover())
+
+	// create a token manager and use
+	tokenMgr := getTokenManager(config)
+	tokenCtxMW := goamiddleware.TokenContext(tokenMgr, app.NewJWTSecurity())
+	service.Use(tokenCtxMW)
+	service.Use(token.InjectTokenManager(tokenMgr))
+
 	// record HTTP request metrics in prometh
 	service.Use(
 		metric.Recorder(
@@ -227,6 +236,15 @@ func connect(config *configuration.Config) *gorm.DB {
 		db.DB().SetMaxOpenConns(config.GetPostgresConnectionMaxOpen())
 	}
 	return db
+}
+
+func getTokenManager(config *configuration.Config) token.Manager {
+	tokenMgr, err := token.DefaultManager(config)
+	if err != nil {
+		log.Panic(nil, map[string]interface{}{"err": err},
+			"failed to setup jwt middleware")
+	}
+	return tokenMgr
 }
 
 func printUserInfo() {
