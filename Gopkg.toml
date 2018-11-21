@@ -60,9 +60,3 @@ ignored = [
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.2.1"
-
-[[constraint]]
-  name = "github.com/dnaeon/go-vcr"
-  #revision= "9d71b8a6df86e00127f96bc8dabc09856ab8afdb"
-  source= "https://github.com/xcoulon/go-vcr/"
-  revision= "fd097d581a47517ee36686adfd3153d6f8eca367"
