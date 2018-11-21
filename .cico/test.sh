@@ -12,5 +12,3 @@ compile
 run_postgres
 
 do_test
-
-do_coverage
