@@ -96,13 +96,13 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 
 	s.T().Run("fail", func(t *testing.T) {
 		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
-		createCtxerr, rw := s.createPipelineEnvironmentCtrlNoErroring()
-		createCtxerr.Payload = payload
-		s.ctrl.Create(createCtxerr)
-		require.Equal(t, 500, rw.Code)
 
-		createCtxerr, rw = s.createPipelineEnvironmentCtrlNoErroring()
+		response, err := test.CreatePipelineEnvironmentsInternalServerError(t, s.ctx, s.svc, s.ctrl, uuid.NewV4(), payload)
+		require.NotNil(t, response.Header().Get("Location"))
+		assert.Regexp(s.T(), ".*duplicate key value violates unique constraint.*", err.Errors)
+
 		emptyPayload := &app.CreatePipelineEnvironmentsPayload{}
+		createCtxerr, rw := s.createPipelineEnvironmentCtrlNoErroring()
 		createCtxerr.Payload = emptyPayload
 		s.ctrl.Create(createCtxerr)
 		require.Equal(t, 400, rw.Code)
