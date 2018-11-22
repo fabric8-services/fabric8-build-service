@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/fabric8-services/fabric8-common/errors"
@@ -48,6 +49,10 @@ func (r *GormRepository) Create(ctx context.Context, pipl *Pipeline) (*Pipeline,
 
 	err := r.db.Create(pipl).Error
 	if err != nil {
+		if gormsupport.IsUniqueViolation(err, "pipelines_name_space_id_key") {
+			return nil, errors.NewDataConflictError(fmt.Sprintf("pipeline_name %s with spaceID %s already exists", *pipl.Name, pipl.SpaceID))
+		}
+
 		log.Error(ctx, map[string]interface{}{"err": err},
 			"unable to create pipeline")
 		return nil, errs.WithStack(err)

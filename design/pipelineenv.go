@@ -48,6 +48,7 @@ var _ = a.Resource("PipelineEnvironments", func() {
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.Unauthorized, JSONAPIErrors)
 		a.Response(d.MethodNotAllowed, JSONAPIErrors)
+		a.Response(d.Conflict, JSONAPIErrors)
 	})
 
 	a.Action("show", func() {

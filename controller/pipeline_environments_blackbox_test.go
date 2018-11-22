@@ -92,14 +92,25 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 		assert.NotNil(t, newEnv)
 		assert.NotNil(t, newEnv.Data.ID)
 		assert.NotNil(t, newEnv.Data.Environments[0].EnvUUID)
+
+		// Same pipeline_name but different spaceID is OK
+		payload = newPipelineEnvironmentPayload("osio-stage-create", uuid.NewV4())
+		_, newEnv = test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, uuid.NewV4(), payload)
+		assert.NotNil(t, newEnv)
+		assert.NotNil(t, newEnv.Data.ID)
+		assert.NotNil(t, newEnv.Data.Environments[0].EnvUUID)
 	})
 
 	s.T().Run("fail", func(t *testing.T) {
-		payload := newPipelineEnvironmentPayload("osio-stage-create", uuid.NewV4())
+		conflict_space_id := uuid.NewV4()
+		payload := newPipelineEnvironmentPayload("osio-stage-create-conflict", uuid.NewV4())
 
-		response, err := test.CreatePipelineEnvironmentsInternalServerError(t, s.ctx2, s.svc2, s.ctrl2, uuid.NewV4(), payload)
+		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, conflict_space_id, payload)
+		assert.NotNil(t, newEnv)
+
+		response, err := test.CreatePipelineEnvironmentsConflict(t, s.ctx2, s.svc2, s.ctrl2, conflict_space_id, payload)
 		require.NotNil(t, response.Header().Get("Location"))
-		assert.Regexp(s.T(), ".*duplicate key value violates unique constraint.*", err.Errors)
+		assert.Regexp(s.T(), ".*data_conflict_error.*", err.Errors)
 
 		emptyPayload := &app.CreatePipelineEnvironmentsPayload{}
 		createCtxerr, rw := s.createPipelineEnvironmentCtrlNoErroring()
