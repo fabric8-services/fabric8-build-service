@@ -52,8 +52,10 @@ ENV_CONTAINER_IMAGE = quay.io/openshiftio/fabric8-services-fabric8-env:latest
 ENV_DB_CONTAINER_NAME = db-env
 ENV_DB_CONTAINER_IMAGE = $(DB_CONTAINER_IMAGE)
 
-# By default reduce the amount of log output from tests
+# By default reduce the amount of log output from tests, set this to debug and GO_TEST_VERBOSITY_FLAG to -v to increase it
 F8_LOG_LEVEL ?= error
+GO_TEST_VERBOSITY_FLAG =
+
 
 # declares variable that are OS-sensitive
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
@@ -124,7 +126,7 @@ test-unit: prebuild-check $(SOURCES) generate ## Runs the unit tests and WITHOUT
 	$(eval TEST_PACKAGES:=$(shell go list ./... | grep -v $(ALL_PKGS_EXCLUDE_PATTERN)))
 	F8_RESOURCE_UNIT_TEST=1 F8_RESOURCE_DATABASE=1 F8_DEVELOPER_MODE_ENABLED=1 \
 	F8_LOG_LEVEL=$(F8_LOG_LEVEL) \
-	go test -v $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
+	go test $(GO_TEST_VERBOSITY_FLAG) $(TEST_PACKAGES)
 
 .PHONY: coverage
 coverage: prebuild-check deps $(SOURCES) ## Run coverage
