@@ -107,9 +107,6 @@ func (c *Config) setConfigDefaults() {
 
 	// Timeout of a transaction in minutes
 	c.v.SetDefault(varPostgresTransactionTimeout, 5*time.Minute)
-
-	// Auth
-	c.v.SetDefault(varAuthURL, "http://localhost:8089")
 }
 
 // DeveloperModeEnabled returns `true` if development related features (as set via default, config file, or environment variable),
@@ -133,7 +130,7 @@ func (c *Config) GetAuthServiceURL() string {
 	if c.DeveloperModeEnabled() {
 		return "https://auth.prod-preview.openshift.io"
 	}
-	return ""
+	return "http://localhost:8089"
 }
 
 // GetEnvironment returns the current environment application is deployed in
