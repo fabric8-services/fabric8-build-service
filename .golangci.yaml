@@ -3,20 +3,16 @@ run:
     - migration/sqlbindata.go
   skip-dirs:
     - design/*
-
 linters:
+  fast: true
   disable:
+    # typecheck errors due to https://github.com/goadesign/goa/issues/1850,
+    # need to update to goagen >= 1.4.0
+    - typecheck
     - lll
-    - gosec
     - prealloc
-    - megacheck
-  enable-all: true
-
-issues:
-  exclude-use-default: false
-  exclude:
-    - .*, which can be annoying to use.*
-    - .((os\.)?std(out|err)\..*|.*Close|.*Flush|.*Write|.*Serve|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv).
-
-output:
-  format: line-number
+    - gosec
+service:
+  project-path: github.com/fabric8-services/fabric8-build
+  prepare:
+    - make deps generate
