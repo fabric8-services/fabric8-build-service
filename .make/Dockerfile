@@ -2,7 +2,6 @@ FROM centos:7
 LABEL maintainer "Devtools <devtools@redhat.com>"
 LABEL author "Devtools <devtools@redhat.com>"
 ENV LANG=en_US.utf8
-ENV F8_INSTALL_PREFIX=/usr/local/build
 
 # Create a non-root user and a group with the same name: "build"
 ENV F8_USER_NAME=build
@@ -18,12 +17,12 @@ RUN yum install -y pcp pcp-pmda-prometheus && yum clean all && \
 COPY .make/pcp/fabric8-build+pmcd.sh /fabric8-build+pmcd.sh
 EXPOSE 44321
 
-COPY bin/fabric8-build ${F8_INSTALL_PREFIX}/bin/fabric8-build
+COPY bin/fabric8-build /bin/fabric8-build
 
 # From here onwards, any RUN, CMD, or ENTRYPOINT will be run under the following user
 USER ${F8_USER_NAME}
 
-WORKDIR ${F8_INSTALL_PREFIX}
+WORKDIR /
 ENTRYPOINT [ "/fabric8-build+pmcd.sh" ]
 
 EXPOSE 8080
