@@ -118,5 +118,4 @@ function do_coverage() {
 
 function do_test() {
     make test-unit
-    make analyze-go-code
 }
