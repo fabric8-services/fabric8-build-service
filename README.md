@@ -6,20 +6,7 @@ Fabric8 build service is the build service providing a REST API for the build op
 API
 ---
 
-POST `/api/pipelines/environments/$(SPACE_UUID)`
-
-```json
-{
-  "data": {
-    "name": "pipeline1",
-    "environments": [
-      {
-        "envUUID": "$(ENVIRONMENT_UID)"
-      }
-    ]
-  }
-}
-```
+Swagger documentation available [here](http://swagger.goa.design/?url=github.com%2Ffabric8-services%2Ffabric8-build%2Fdesign#/).
 
 Development
 -----------
@@ -37,6 +24,12 @@ and this will deploy the services :
 * current build
 
 ### Building
+
+#### Prerequisites
+
+go (>=1.8), git, make, dep
+
+#### Make commands
 
 * If you run `make` without argument it would print all the useful target to run with a help.
 * `make build` will build fabric8-build
