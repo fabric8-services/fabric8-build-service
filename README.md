@@ -23,6 +23,10 @@ and this will deploy the services :
 * env
 * current build
 
+with all the configuration needed,
+The script is not idempotent it will just clean itself on multiple runs,
+
+
 ### Building
 
 #### Prerequisites
@@ -49,7 +53,7 @@ make migrate-database
 
 This will run all the sql files from [migration/sql-files/*](migration/sql-files/)
 
-* You need to have a auth server in the variable F8_AUTH_URL, if you were using the `deploy-openshift-dev.sh` script you can get the public route and expose it directly like this :
+* You need to have a auth server in the variable F8_AUTH_URL, if you were using the [openshift/deploy-openshift-dev.sh](openshift/deploy-openshift-dev.sh) script you can get the public route and expose it directly like this :
 
 ```bash
 `export F8_AUTH_URL="http://$(oc get route auth -o json|jq -r .spec.host)"`
