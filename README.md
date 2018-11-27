@@ -37,7 +37,7 @@ go (>=1.8), git, make, dep
 * `make container-run` will start a DB container into docker
 * `make coverage` will run the coverage (need DB)
 * `make test-unit` will run all the test units  (need DB)
-* `make analyze-go-code` will run the [golangci](https://github.com/golangci/golangci-lint) static analysis tool, run it before sending your PR to github.
+* `make analyze-go-code` will run the [golangci](https://github.com/golangci/golangci-lint) static analysis tool, run it before sending your PR to github. The [golangci](https://golangci.com/r/github.com/fabric8-services/fabric8-build) check service will be the one taking care of checking your PR, so it can report nicely on your code if there is any issues.
 
 ### RUNNING
 
