@@ -31,9 +31,8 @@ type PipelineEnvironmentControllerSuite struct {
 	ctx  context.Context
 	ctx2 context.Context
 
-	ctrl     *controller.PipelineEnvironmentController
-	ctrl2    *controller.PipelineEnvironmentController
-	prodCtrl *controller.PipelineEnvironmentController
+	ctrl  *controller.PipelineEnvironmentController
+	ctrl2 *controller.PipelineEnvironmentController
 }
 
 func TestPipelineEnvironmentController(t *testing.T) {
@@ -114,7 +113,8 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 		emptyPayload := &app.CreatePipelineEnvironmentsPayload{}
 		createCtxerr, rw := s.createPipelineEnvironmentCtrlNoErroring()
 		createCtxerr.Payload = emptyPayload
-		s.ctrl2.Create(createCtxerr)
+		jerr := s.ctrl2.Create(createCtxerr)
+		require.Nil(t, jerr)
 		require.Equal(t, 400, rw.Code)
 	})
 

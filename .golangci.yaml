@@ -5,13 +5,6 @@ run:
     - design/*
 linters:
   fast: true
-  disable:
-    # typecheck errors due to https://github.com/goadesign/goa/issues/1850,
-    # need to update to goagen >= 1.4.0
-    - typecheck
-    - lll
-    - prealloc
-    - gosec
 service:
   project-path: github.com/fabric8-services/fabric8-build
   prepare:
