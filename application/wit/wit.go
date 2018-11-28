@@ -12,13 +12,13 @@ import (
 	"github.com/fabric8-services/fabric8-common/goasupport"
 	"github.com/pkg/errors"
 
-	"github.com/goadesign/goa/uuid"
+	guuid "github.com/goadesign/goa/uuid"
 	"github.com/prometheus/common/log"
 )
 
 type Space struct {
-	ID          uuid.UUID
-	OwnerID     uuid.UUID
+	ID          guuid.UUID
+	OwnerID     guuid.UUID
 	Name        string
 	Description string
 }
@@ -39,7 +39,7 @@ func (s *WITServiceImpl) GetSpace(ctx context.Context, spaceID string) (space *S
 		return nil, err
 	}
 
-	spaceIDUUID, err := uuid.FromString(spaceID)
+	spaceIDUUID, err := guuid.FromString(spaceID)
 	if err != nil {
 		return nil, err
 	}

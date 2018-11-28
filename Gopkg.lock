@@ -104,8 +104,16 @@
   revision = "45960af9689499e9f5e5a4ebd142a8189a19ca1e"
 
 [[projects]]
-  name = "github.com/fabric8-services/fabric8-wit"
+  name = "github.com/fabric8-services/fabric8-env"
   packages = ["design"]
+  revision = "f81e3120df92f20cca3c06d98d03e2e83cd15862"
+
+[[projects]]
+  name = "github.com/fabric8-services/fabric8-wit"
+  packages = [
+    "design",
+    "goasupport"
+  ]
   revision = "b59d0dc8ae9b2bfea1fb5dc6ff3552c42b735756"
 
 [[projects]]
@@ -493,6 +501,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "243b6a93f8916459eea58c49d49e110faf1d215f25330727bc50828927f20df1"
+  inputs-digest = "0776cf301e02f0fd4decdde64b25b62c5ed8aa90577649465bd5ae00809f9802"
   solver-name = "gps-cdcl"
   solver-version = 1

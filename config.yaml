@@ -20,6 +20,9 @@ metrics.http.address: ""
 # Auth
 auth.url: ""
 
+# Env
+env.url: ""
+
 #------------------------
 # Postgres configuration
 #------------------------

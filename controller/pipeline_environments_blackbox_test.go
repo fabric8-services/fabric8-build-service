@@ -14,6 +14,7 @@ import (
 	"github.com/fabric8-services/fabric8-build/app"
 	"github.com/fabric8-services/fabric8-build/app/test"
 	"github.com/fabric8-services/fabric8-build/application"
+	"github.com/fabric8-services/fabric8-build/application/env/envservice"
 	"github.com/fabric8-services/fabric8-build/application/wit/witservice"
 	"github.com/fabric8-services/fabric8-build/configuration"
 	"github.com/fabric8-services/fabric8-build/controller"
@@ -72,6 +73,7 @@ func (s *PipelineEnvironmentControllerSuite) SetupSuite() {
 	s.ctrl2 = controller.NewPipelineEnvironmentController(s.svc2, s.db, s.svcFactory)
 
 	os.Setenv("F8_WIT_URL", "http://witservice")
+	os.Setenv("F8_ENV_URL", "http://envservice")
 	// gock.Observe(gock.DumpRequest)
 
 	defer gock.OffAll()
@@ -112,11 +114,50 @@ func (s *PipelineEnvironmentControllerSuite) createSpaceJson(spaceName string, s
 	return string(b)
 }
 
+func (s *PipelineEnvironmentControllerSuite) createEnvListJson(envID1 uuid.UUID, envID2 uuid.UUID) string {
+	_envID1, _ := guuid.FromString(envID1.String())
+	_envID2, _ := guuid.FromString(envID2.String())
+	_envName1 := "env1"
+	_envName2 := "env2"
+
+	env := envservice.EnvironmentsList{
+		Data: []*envservice.Environment{
+			{
+				ID: &_envID1,
+				Attributes: &envservice.EnvironmentAttributes{
+					Name: &_envName1,
+				},
+				Links: &envservice.GenericLinks{},
+				Type:  "environments",
+			},
+			{
+				ID: &_envID2,
+				Attributes: &envservice.EnvironmentAttributes{
+					Name: &_envName2,
+				},
+				Links: &envservice.GenericLinks{},
+				Type:  "environments",
+			},
+		},
+		Links: &envservice.PagingLinks{},
+		Meta:  &envservice.EnvironmentListMeta{},
+	}
+	b, _ := json.Marshal(env)
+	return string(b)
+}
+
 func (s *PipelineEnvironmentControllerSuite) createGockONSpace(spaceID uuid.UUID, spaceName string) {
 	gock.New("http://witservice").
 		Get("/api/spaces/" + spaceID.String()).
 		Reply(200).
 		JSON(s.createSpaceJson(spaceName, spaceID))
+}
+
+func (s *PipelineEnvironmentControllerSuite) createGockONEnvList(spaceID uuid.UUID, envID1 uuid.UUID, envID2 uuid.UUID) {
+	gock.New("http://envservice").
+		Get("/api/spaces/" + spaceID.String() + "/environments").
+		Reply(200).
+		JSON(s.createEnvListJson(envID1, envID2))
 }
 
 // createPipelineEnvironmentCtrlNoErroring we do this one manually cause the one from
@@ -143,8 +184,11 @@ func (s *PipelineEnvironmentControllerSuite) createPipelineEnvironmentCtrlNoErro
 func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 	defer s.T().Run("ok", func(t *testing.T) {
 		space1ID := uuid.NewV4()
+		env1ID := uuid.NewV4()
+		env2ID := uuid.NewV4()
 		s.createGockONSpace(space1ID, "space1")
-		payload := newPipelineEnvironmentPayload("osio-stage-create", uuid.NewV4())
+		s.createGockONEnvList(space1ID, env1ID, env2ID)
+		payload := newPipelineEnvironmentPayload("osio-stage-create", env1ID)
 		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, space1ID, payload)
 		assert.NotNil(t, newEnv)
 		assert.NotNil(t, newEnv.Data.ID)
@@ -153,7 +197,8 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 		// Same pipeline_name but different spaceID is OK
 		space2ID := uuid.NewV4()
 		s.createGockONSpace(space2ID, "space2")
-		payload = newPipelineEnvironmentPayload("osio-stage-create", uuid.NewV4())
+		s.createGockONEnvList(space2ID, env1ID, env2ID)
+		payload = newPipelineEnvironmentPayload("osio-stage-create", env1ID)
 		_, newEnv = test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, space2ID, payload)
 		assert.NotNil(t, newEnv)
 		assert.NotNil(t, newEnv.Data.ID)
@@ -162,13 +207,17 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 
 	s.T().Run("fail", func(t *testing.T) {
 		space1ID := uuid.NewV4()
+		env1ID := uuid.NewV4()
+		env2ID := uuid.NewV4()
 
 		s.createGockONSpace(space1ID, "space1")
-		payload := newPipelineEnvironmentPayload("osio-stage-create-conflict", uuid.NewV4())
+		s.createGockONEnvList(space1ID, env1ID, env2ID)
+		payload := newPipelineEnvironmentPayload("osio-stage-create-conflict", env1ID)
 		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, space1ID, payload)
 		assert.NotNil(t, newEnv)
 
 		s.createGockONSpace(space1ID, "space1")
+		s.createGockONEnvList(space1ID, env1ID, env2ID)
 		response, err := test.CreatePipelineEnvironmentsConflict(t, s.ctx2, s.svc2, s.ctrl2, space1ID, payload)
 		require.NotNil(t, response.Header().Get("Location"))
 		assert.Regexp(s.T(), ".*data_conflict_error.*", err.Errors)
@@ -184,7 +233,7 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 		gock.New("http://witservice").
 			Get("/api/spaces/" + failSpaceID.String()).
 			Reply(404)
-		payload = newPipelineEnvironmentPayload("space-not-found", uuid.NewV4())
+		payload = newPipelineEnvironmentPayload("space-not-found", env1ID)
 		response, err = test.CreatePipelineEnvironmentsNotFound(t, s.ctx2, s.svc2, s.ctrl2, failSpaceID, payload)
 		require.NotNil(t, response.Header().Get("Location"))
 		assert.Regexp(s.T(), ".*not_found.*", err.Errors)
@@ -193,18 +242,27 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 		gock.New("http://witservice").
 			Get("/api/spaces/" + failSpaceID.String()).
 			Reply(422)
-		payload = newPipelineEnvironmentPayload("space-unkown-error", uuid.NewV4())
+		payload = newPipelineEnvironmentPayload("space-unkown-error", env1ID)
 		response, err = test.CreatePipelineEnvironmentsInternalServerError(t, s.ctx2, s.svc2, s.ctrl2, failSpaceID, payload)
 		require.NotNil(t, response.Header().Get("Location"))
 		assert.Regexp(s.T(), ".*unknown_error.*", err.Errors)
 
+		failEnvID := uuid.NewV4()
+		s.createGockONSpace(space1ID, "space1")
+		s.createGockONEnvList(space1ID, env1ID, env2ID)
+		payload = newPipelineEnvironmentPayload("env-not-found", failEnvID)
+		response, err = test.CreatePipelineEnvironmentsNotFound(t, s.ctx2, s.svc2, s.ctrl2, space1ID, payload)
+		require.NotNil(t, response.Header().Get("Location"))
+		assert.Regexp(s.T(), ".*not_found.*", err.Errors)
 	})
 
 	s.T().Run("unauthorized", func(t *testing.T) {
 		space1ID := uuid.NewV4()
+		env1ID := uuid.NewV4()
+		env2ID := uuid.NewV4()
 		s.createGockONSpace(space1ID, "space1")
-
-		payload := newPipelineEnvironmentPayload("osio-stage", uuid.NewV4())
+		s.createGockONEnvList(space1ID, env1ID, env2ID)
+		payload := newPipelineEnvironmentPayload("osio-stage", env2ID)
 		_, err := test.CreatePipelineEnvironmentsUnauthorized(t, s.ctx, s.svc, s.ctrl, space1ID, payload)
 		assert.NotNil(t, err)
 	})
@@ -213,8 +271,11 @@ func (s *PipelineEnvironmentControllerSuite) TestCreate() {
 func (s *PipelineEnvironmentControllerSuite) TestShow() {
 	s.T().Run("ok", func(t *testing.T) {
 		spaceID := uuid.NewV4()
+		env1ID := uuid.NewV4()
+		env2ID := uuid.NewV4()
 		s.createGockONSpace(spaceID, "space1")
-		payload := newPipelineEnvironmentPayload("osio-stage-show", uuid.NewV4())
+		s.createGockONEnvList(spaceID, env1ID, env2ID)
+		payload := newPipelineEnvironmentPayload("osio-stage-show", env1ID)
 		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, spaceID, payload)
 		require.NotNil(t, newEnv)
 

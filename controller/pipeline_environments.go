@@ -2,14 +2,16 @@ package controller
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/fabric8-services/fabric8-build/app"
 	"github.com/fabric8-services/fabric8-build/application"
+	"github.com/fabric8-services/fabric8-build/application/env"
 	"github.com/fabric8-services/fabric8-build/build"
 	"github.com/fabric8-services/fabric8-common/errors"
 	"github.com/fabric8-services/fabric8-common/httpsupport"
 	"github.com/fabric8-services/fabric8-common/token"
 	"github.com/goadesign/goa"
+	guuid "github.com/goadesign/goa/uuid"
 	errs "github.com/pkg/errors"
 	"github.com/prometheus/common/log"
 )
@@ -28,16 +30,6 @@ func NewPipelineEnvironmentController(service *goa.Service, db application.DB, s
 		db:         db,
 		svcFactory: svcFactory,
 	}
-}
-
-func checkAndConvertEnvironment(envs []*app.EnvironmentAttributes) (ret []build.Environment, err error) {
-	//TODO: check environemnts here
-	for _, env := range envs {
-		ret = append(ret, build.Environment{
-			EnvironmentID: env.EnvUUID,
-		})
-	}
-	return
 }
 
 // Create runs the create action.
@@ -62,9 +54,9 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 		return app.JSONErrorResponse(ctx, err)
 	}
 
-	newEnvs, err := checkAndConvertEnvironment(reqPpl.Environments)
+	newEnvs, err := c.checkEnvironmentExistAndConvert(ctx, spaceID.String(), reqPpl.Environments)
 	if err != nil {
-		return app.JSONErrorResponse(ctx, err)
+		return app.JSONErrorResponse(ctx, errors.NewNotFoundError("environment", err.Error()))
 	}
 
 	var ppl *build.Pipeline
@@ -140,6 +132,7 @@ func (c *PipelineEnvironmentController) Show(ctx *app.ShowPipelineEnvironmentsCo
 	return ctx.OK(res)
 }
 
+// This will check whether the given space exist or not
 func (c *PipelineEnvironmentController) checkSpaceExist(ctx context.Context, spaceID string) error {
 	// TODO(chmouel): Make sure we have the rights for that space
 	// TODO(chmouel): Better error reporting when NOTFound
@@ -148,4 +141,35 @@ func (c *PipelineEnvironmentController) checkSpaceExist(ctx context.Context, spa
 		return errs.Wrapf(err, "failed to get space id: %s from wit", spaceID)
 	}
 	return nil
+}
+
+// This will check whether the env's exit and then convert to build.Environment List
+func (c *PipelineEnvironmentController) checkEnvironmentExistAndConvert(ctx *app.CreatePipelineEnvironmentsContext, spaceID string, envs []*app.EnvironmentAttributes) ([]build.Environment, error) {
+	envList, err := c.svcFactory.ENVService().GetEnvList(ctx, spaceID)
+	if err != nil {
+		return nil, errs.Wrapf(err, "failed to get env list for space id: %s from env service", spaceID)
+	}
+	envUUIDList := convertToEnvUidList(envList)
+	var environments []build.Environment
+	for _, env := range envs {
+		envId, _ := guuid.FromString(env.EnvUUID.String())
+		envName := envUUIDList[envId]
+		if envName == "" {
+			return nil, errors.NewNotFoundError("environment", env.EnvUUID.String()) //errs.Wrapf(err, "Env %s for space id: %s does not exist", envId, spaceID)
+		}
+		environments = append(environments, build.Environment{
+			EnvironmentID: env.EnvUUID,
+		})
+	}
+	return environments, nil
+}
+
+// This will convert the list of env into map[envId]envName
+// this will help to check whether env exist or not
+func convertToEnvUidList(envList []env.Environment) map[guuid.UUID]string {
+	var envMap = make(map[guuid.UUID]string)
+	for _, env := range envList {
+		envMap[env.ID] = env.Name
+	}
+	return envMap
 }

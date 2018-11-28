@@ -27,6 +27,7 @@ const (
 	// External f8 services
 	varAuthURL = "auth.url"
 	varWITURL  = "wit.url"
+	varEnvURL  = "env.url"
 
 	// Postgres
 	varPostgresHost                 = "postgres.host"
@@ -133,6 +134,11 @@ func (c *Config) GetAuthServiceURL() string {
 		return "https://auth.prod-preview.openshift.io"
 	}
 	return "http://localhost:8089"
+}
+
+// GetEnvServiceUrl returns Env Service URL
+func (c *Config) GetEnvServiceURL() (string, error) {
+	return c.v.GetString(varEnvURL), nil
 }
 
 // GetEnvironment returns the current environment application is deployed in
