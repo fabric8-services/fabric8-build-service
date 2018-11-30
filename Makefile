@@ -137,7 +137,7 @@ coverage: prebuild-check deps $(SOURCES) ## Run coverage
 	F8_DEVELOPER_MODE_ENABLED=1 F8_RESOURCE_UNIT_TEST=1 \
 	F8_LOG_LEVEL=$(F8_LOG_LEVEL) F8_RESOURCE_DATABASE=1 \
 	./vendor/github.com/haya14busa/goverage/goverage -v -coverprofile=tmp/coverage.out $(TEST_PACKAGES)
-	sed -i~ '/\/sqlbindata.go:/d' tmp/coverage.out
+	sed -i~ -e '/\/sqlbindata.go:/d' -e '/\/main.go:/d' tmp/coverage.out
 	@go tool cover -func tmp/coverage.out
 
 # -------------------------------------------------------------------
