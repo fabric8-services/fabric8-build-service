@@ -1,5 +1,4 @@
-Fabric8-build
-=============
+# Fabric8 Build [![Jenkins-CI](https://ci.centos.org/buildStatus/icon?job=devtools-fabric8-build-fabric8-push-build-master)](https://ci.centos.org/job/devtools-fabric8-build-fabric8-push-build-master/lastBuild/console) [![codecov](https://codecov.io/gh/fabric8-services/fabric8-build/branch/master/graph/badge.svg)](https://codecov.io/gh/fabric8-services/fabric8-build) [![Go Report Card](https://goreportcard.com/badge/github.com/fabric8-services/fabric8-build)](https://goreportcard.com/report/github.com/fabric8-services/fabric8-build) [![GolangCI](https://golangci.com/badges/github.com/fabric8-services/fabric8-build.svg)](https://golangci.com/r/github.com/fabric8-services/fabric8-build) [![Swagger](https://godoc.org/github.com/fabric8-services/fabric8-build/design?status.svg)](http://swagger.goa.design/?url=github.com%2Ffabric8-services%2Ffabric8-build%2Fdesign)
 
 Fabric8 build service is the build service providing a REST API for the build operations on [OpenShift.IO](https://openshift.io)
 
