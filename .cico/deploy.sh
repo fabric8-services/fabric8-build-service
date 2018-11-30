@@ -8,3 +8,5 @@ source .cico/setup.sh
 setup
 
 deploy
+
+deploy_devcluster build

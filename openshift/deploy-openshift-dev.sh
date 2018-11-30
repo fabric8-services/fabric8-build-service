@@ -31,7 +31,7 @@ function waitForDC() {
     local max=60 # 2mn
     local cnt=0
 
-    while [[ $(oc get dc/${DC} -o json | jq '.status.availableReplicas') < 1 ]];do
+    while [[ $(oc get dc/${DC} -o json|python -c "import sys, json;x=json.load(sys.stdin);print x['status']['availableReplicas']") < 1 ]];do
         [[ ${cnt} > ${max} ]] && {
             echo "Timing out while waiting for DC/${DC}";
             exit 1
