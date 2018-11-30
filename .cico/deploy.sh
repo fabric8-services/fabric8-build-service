@@ -9,4 +9,7 @@ setup
 
 deploy
 
-deploy_devcluster build
+# Just deploy once!
+if [ "$TARGET" != "rhel" ]; then
+    deploy_devcluster build
+fi
