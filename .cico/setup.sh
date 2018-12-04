@@ -28,7 +28,8 @@ function setup() {
     # We need to disable selinux for now, XXX
     /usr/sbin/setenforce 0 || :
 
-    yum -y install buildah podman make golang git
+    yum install epel-release --enablerepo=extras -y
+    yum -y install --enablerepo=epel-testing buildah podman make golang git
 
     mkdir -p $(dirname ${REPO_PATH})
     cp -a ${HOME}/payload ${REPO_PATH}
