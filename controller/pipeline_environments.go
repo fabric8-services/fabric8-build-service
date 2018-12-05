@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"github.com/fabric8-services/fabric8-build/app"
 	"github.com/fabric8-services/fabric8-build/application"
 	"github.com/fabric8-services/fabric8-build/application/env"
