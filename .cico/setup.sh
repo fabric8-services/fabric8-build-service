@@ -29,7 +29,7 @@ function setup() {
     /usr/sbin/setenforce 0 || :
 
     yum install epel-release --enablerepo=extras -y
-    yum -y install --enablerepo=epel-testing buildah podman make golang git
+    yum -y install --enablerepo=epel-testing podman make golang git
 
     mkdir -p $(dirname ${REPO_PATH})
     cp -a ${HOME}/payload ${REPO_PATH}
@@ -42,8 +42,8 @@ function tag_push() {
     local image="$1"
     local tag="$2"
 
-    buildah tag ${image}:latest ${image}:${tag}
-    buildah push ${image}:${tag} ${image}:${tag}
+    podman tag ${image}:latest ${image}:${tag}
+    podman push ${image}:${tag} ${image}:${tag}
 }
 
 function deploy() {

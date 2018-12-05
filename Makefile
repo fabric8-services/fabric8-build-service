@@ -107,12 +107,7 @@ build-linux: prebuild-check deps generate
 
 .PHONY: image
 image: clean-artifacts build-linux ## Build the container image
-ifeq ($(UNAME_S),Linux)
-		buildah bud -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
-else
-		docker build -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
-endif
-
+		$(CONTAINER_RUN) build -t $(REGISTRY_URL_IMAGE) -f $(CONTAINERFILE) .
 
 # -------------------------------------------------------------------
 # Unittest
