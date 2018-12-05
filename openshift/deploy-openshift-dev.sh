@@ -60,9 +60,9 @@ function deploy_db() {
     for x in ${DBS};do
         cnt=0
         while true;do
-            [[ ${cnt} -ge 20 ]] && { echo "Cannot connect to database"; exit 1 ; }
+            [[ ${cnt} -ge 50 ]] && { echo "Cannot connect to database"; exit 1 ; }
             oc rsh dc/${DC_DB} psql -c  "create database ${x};" && break || {
-                cnt+=1
+                (( cnt++ ))
                 sleep 5
            }
         done
