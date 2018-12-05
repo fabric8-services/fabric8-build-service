@@ -29,7 +29,7 @@ IMAGE_PULL_POLICY="IfNotPresent"
 function waitForDC() {
     DC=$1
     local max=60 # 2mn
-    local cnt=0
+    local cnt=1
 
     while [[ $(oc get dc/${DC} -o json|python -c "import sys, json;x=json.load(sys.stdin);print x['status']['availableReplicas']") < 1 ]];do
         [[ ${cnt} > ${max} ]] && {
