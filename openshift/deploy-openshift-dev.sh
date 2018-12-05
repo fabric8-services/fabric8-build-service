@@ -38,7 +38,7 @@ function waitForDC() {
         }
 
         sleep 2
-        cnt+=1
+        (( cnt++ ))
     done
 }
 
