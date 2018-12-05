@@ -155,7 +155,7 @@ func (c *PipelineEnvironmentController) checkEnvironmentExistAndConvert(ctx *app
 		envId, _ := guuid.FromString(env.EnvUUID.String())
 		envName := envUUIDList[envId]
 		if envName == "" {
-			return nil, errors.NewNotFoundError("environment", env.EnvUUID.String()) //errs.Wrapf(err, "Env %s for space id: %s does not exist", envId, spaceID)
+			return nil, errors.NewNotFoundError("environment", env.EnvUUID.String())
 		}
 		environments = append(environments, build.Environment{
 			EnvironmentID: env.EnvUUID,
