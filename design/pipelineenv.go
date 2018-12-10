@@ -36,7 +36,7 @@ var pipelineEnvSingle = JSONSingle(
 var _ = a.Resource("PipelineEnvironments", func() {
 	a.Action("create", func() {
 		a.Routing(
-			a.POST("/pipelines/environments/:spaceID"),
+			a.POST("/spaces/:spaceID/pipeline-environments"),
 		)
 		a.Description("Create environment")
 		a.Params(func() {
@@ -59,7 +59,7 @@ var _ = a.Resource("PipelineEnvironments", func() {
 		})
 
 		a.Routing(
-			a.GET("/pipeline/environments/:spaceID"),
+			a.GET("/spaces/:spaceID/pipeline-environments"),
 		)
 
 		a.Params(func() {

@@ -124,7 +124,7 @@ func (s *PipelineEnvironmentControllerSuite) createGockONSpace(spaceID uuid.UUID
 func (s *PipelineEnvironmentControllerSuite) createPipelineEnvironmentCtrlNoErroring(spaceID uuid.UUID) (*app.CreatePipelineEnvironmentsContext, *httptest.ResponseRecorder) {
 	rw := httptest.NewRecorder()
 	u := &url.URL{
-		Path: fmt.Sprintf("/api/pipelines/environments/%v", spaceID),
+		Path: fmt.Sprintf("/api/spaces/%v/pipeline-environments", spaceID),
 	}
 	req, _err := http.NewRequest("POST", u.String(), nil)
 	if _err != nil {
