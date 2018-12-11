@@ -45,6 +45,9 @@ function waitForDC() {
 function deploy_db() {
     DBS=${1}
     POSTGRESQL_ADMIN_PASSWORD=`sed -n '/postgres.password/ { s/.*: //;p ;}' config.yaml`
+    # Let's make sure we delete everything
+    oc delete is -l app=db
+    oc delete dc -l app=db --cascade=true 2>/dev/null || true
     oc new-app --name=${DC_DB} -e \
        POSTGRESQL_ADMIN_PASSWORD=${POSTGRESQL_ADMIN_PASSWORD} \
        ${DB_CONTAINER_IMAGE} -o yaml | oc delete ${FORCE_DELETE_VARS} -f- 2>/dev/null || true
@@ -58,7 +61,7 @@ function deploy_db() {
     sleep 2
 
     for x in ${DBS};do
-        cnt=0
+        cnt=1
         while true;do
             [[ ${cnt} -ge 50 ]] && { echo "Cannot connect to database"; exit 1 ; }
             oc rsh dc/${DC_DB} psql -c  "create database ${x};" && break || {
@@ -75,6 +78,7 @@ function deploy_sideservice() {
     local image=${2}
     local env_dbs="${3}"
 
+    oc delete is -l app=${name} 2>/dev/null || true
     oc new-app --name="${name}" ${image} -o yaml | \
         oc delete ${FORCE_DELETE_VARS} -f- 2>/dev/null || true
     sleep 2
