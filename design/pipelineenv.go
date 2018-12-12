@@ -74,7 +74,7 @@ var _ = a.Resource("PipelineEnvironments", func() {
 		)
 		a.Response(d.OK, pipelineEnvList)
 		a.Response(d.InternalServerError, JSONAPIErrors)
-		a.Response(d.NotFound, JSONAPIErrors)
+		a.Response(d.BadRequest, JSONAPIErrors)
 		a.Response(d.Unauthorized, JSONAPIErrors)
 		a.Response(d.Forbidden, JSONAPIErrors)
 	})

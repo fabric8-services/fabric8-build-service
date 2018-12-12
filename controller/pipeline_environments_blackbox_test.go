@@ -285,8 +285,16 @@ func (s *PipelineEnvironmentControllerSuite) TestShow() {
 	})
 
 	s.T().Run("not_found", func(t *testing.T) {
-		envID := uuid.NewV4()
-		_, err := test.ShowPipelineEnvironmentsNotFound(t, s.ctx2, s.svc2, s.ctrl2, envID)
+		spaceID := uuid.NewV4()
+		env1ID := uuid.NewV4()
+		env2ID := uuid.NewV4()
+		s.createGockONSpace(spaceID, "space1")
+		s.createGockONEnvList(spaceID, env1ID, env2ID)
+		payload := newPipelineEnvironmentPayload("osio-stage-show", env1ID)
+		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, spaceID, payload)
+		require.NotNil(t, newEnv)
+
+		_, err := test.ShowPipelineEnvironmentsNotFound(t, s.ctx2, s.svc2, s.ctrl2, uuid.NewV4())
 		assert.NotNil(t, err)
 	})
 }

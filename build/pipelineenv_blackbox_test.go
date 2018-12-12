@@ -84,6 +84,11 @@ func (s *BuildRepositorySuite) TestList() {
 	require.NoError(s.T(), err)
 	assert.NotNil(s.T(), env)
 	assert.Equal(s.T(), 2, len(env))
+
+	env2, err2 := s.buildRepo.List(context.Background(), uuid.NewV4())
+	require.NoError(s.T(), err2)
+	assert.NotNil(s.T(), env2)
+	assert.Equal(s.T(), 0, len(env2))
 }
 
 func newPipeline(name string, spaceID, envUUID uuid.UUID) *build.Pipeline {
