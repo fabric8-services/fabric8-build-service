@@ -116,7 +116,7 @@ function deploy_app() {
     oc expose service/f8build
 }
 
-deploy_db "build auth env"
+deploy_db "wit build auth env"
 
 # AUTH
 AUTH_SERVICE_VARIABLES=$(cat <<EOF
