@@ -39,7 +39,7 @@ DB_CONTAINER_IMAGE = registry.centos.org/postgresql/postgresql:9.6
 # Auth
 AUTH_CONTAINER_NAME = auth
 AUTH_CONTAINER_PORT = 8089
-AUTH_CONTAINER_IMAGE = quay.io/openshiftio/fabric8-services-fabric8-auth:latest
+AUTH_CONTAINER_IMAGE = quay.io/openshiftio/fabric8-services-fabric8-auth:16c631
 
 # Env
 ENV_CONTAINER_NAME = f8env
