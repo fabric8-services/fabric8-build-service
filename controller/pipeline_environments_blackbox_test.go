@@ -279,7 +279,7 @@ func (s *PipelineEnvironmentControllerSuite) TestShow() {
 		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, spaceID, payload)
 		require.NotNil(t, newEnv)
 
-		_, env := test.ShowPipelineEnvironmentsOK(t, s.ctx2, s.svc2, s.ctrl2, spaceID)
+		_, env := test.ShowPipelineEnvironmentsOK(t, s.ctx2, s.svc2, s.ctrl2, *newEnv.Data.ID)
 		assert.NotNil(t, env)
 		assert.Equal(t, newEnv.Data.ID, env.Data.ID)
 	})
@@ -287,6 +287,32 @@ func (s *PipelineEnvironmentControllerSuite) TestShow() {
 	s.T().Run("not_found", func(t *testing.T) {
 		envID := uuid.NewV4()
 		_, err := test.ShowPipelineEnvironmentsNotFound(t, s.ctx2, s.svc2, s.ctrl2, envID)
+		assert.NotNil(t, err)
+	})
+}
+
+func (s *PipelineEnvironmentControllerSuite) TestList() {
+	s.T().Run("ok", func(t *testing.T) {
+		spaceID := uuid.NewV4()
+		env1ID := uuid.NewV4()
+		env2ID := uuid.NewV4()
+		s.createGockONSpace(spaceID, "space1")
+		s.createGockONEnvList(spaceID, env1ID, env2ID)
+		payload := newPipelineEnvironmentPayload("osio-stage-show", env1ID)
+		_, newEnv := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, spaceID, payload)
+		require.NotNil(t, newEnv)
+		payload2 := newPipelineEnvironmentPayload("osio-stage-show", env2ID)
+		_, newEnv2 := test.CreatePipelineEnvironmentsCreated(t, s.ctx2, s.svc2, s.ctrl2, spaceID, payload2)
+		require.NotNil(t, newEnv2)
+
+		_, env := test.ListPipelineEnvironmentsOK(t, s.ctx2, s.svc2, s.ctrl2, spaceID)
+		assert.NotNil(t, env)
+		assert.Equal(t, 2, len(env.Data))
+	})
+
+	s.T().Run("space_not_found", func(t *testing.T) {
+		spaceID := uuid.NewV4()
+		_, err := test.ListPipelineEnvironmentsInternalServerError(t, s.ctx2, s.svc2, s.ctrl2, spaceID)
 		assert.NotNil(t, err)
 	})
 }

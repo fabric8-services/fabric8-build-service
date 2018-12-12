@@ -103,31 +103,42 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 	return ctx.Created(res)
 }
 
-// Show runs the show action.
-func (c *PipelineEnvironmentController) Show(ctx *app.ShowPipelineEnvironmentsContext) error {
+// List runs the list action.
+func (c *PipelineEnvironmentController) List(ctx *app.ListPipelineEnvironmentsContext) error {
 	spaceID := ctx.SpaceID
-
-	ppl, err := c.db.Pipeline().Load(ctx, spaceID)
+	err := c.checkSpaceExist(ctx, spaceID.String())
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
 
-	newEnvAttributes := []*app.EnvironmentAttributes{}
-	for _, pipeline := range ppl.Environment {
-		newEnvAttributes = append(newEnvAttributes, &app.EnvironmentAttributes{
-			EnvUUID: pipeline.EnvironmentID,
-		})
+	pplenv, err := c.db.Pipeline().List(ctx, spaceID)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
 	}
 
+	newPipelineList := []*app.PipelineEnvironments{}
+	for _, ppl := range pplenv {
+		newPipelineList = append(newPipelineList, convertToPipelineEnvironmentStruct(ppl))
+	}
+
+	res := &app.PipelineEnvironmentsList{
+		Data: newPipelineList,
+	}
+	return ctx.OK(res)
+}
+
+// Show runs the load action.
+func (c *PipelineEnvironmentController) Show(ctx *app.ShowPipelineEnvironmentsContext) error {
+	envID := ctx.ID
+	ppl, err := c.db.Pipeline().Load(ctx, envID)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
+	}
+
+	data := convertToPipelineEnvironmentStruct(ppl)
 	res := &app.PipelineEnvironmentSingle{
-		Data: &app.PipelineEnvironments{
-			ID:           &ppl.ID,
-			Name:         *ppl.Name,
-			Environments: newEnvAttributes,
-			SpaceID:      ppl.SpaceID,
-		},
+		Data: data,
 	}
-
 	return ctx.OK(res)
 }
 
@@ -171,4 +182,22 @@ func convertToEnvUidList(envList []env.Environment) map[guuid.UUID]string {
 		envMap[env.ID] = env.Name
 	}
 	return envMap
+}
+
+//this will convert the pipeline struct from database to pipeline-environment struct
+func convertToPipelineEnvironmentStruct(ppl *build.Pipeline) *app.PipelineEnvironments {
+	newEnvAttributes := []*app.EnvironmentAttributes{}
+	for _, pipeline := range ppl.Environment {
+		newEnvAttributes = append(newEnvAttributes, &app.EnvironmentAttributes{
+			EnvUUID: pipeline.EnvironmentID,
+		})
+	}
+
+	pe := &app.PipelineEnvironments{
+		ID:           &ppl.ID,
+		Name:         *ppl.Name,
+		Environments: newEnvAttributes,
+		SpaceID:      ppl.SpaceID,
+	}
+	return pe
 }

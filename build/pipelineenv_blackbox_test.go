@@ -65,10 +65,25 @@ func (s *BuildRepositorySuite) TestShow() {
 	require.NoError(s.T(), err)
 	require.NotNil(s.T(), newEnv)
 
-	env, err := s.buildRepo.Load(context.Background(), spaceID)
+	env, err := s.buildRepo.Load(context.Background(), newEnv.ID)
 	require.NoError(s.T(), err)
 	assert.NotNil(s.T(), env)
 	assert.Equal(s.T(), newEnv.ID, env.ID)
+}
+
+func (s *BuildRepositorySuite) TestList() {
+	spaceID, envUUID, envUUID2 := uuid.NewV4(), uuid.NewV4(), uuid.NewV4()
+	newEnv, err := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow", spaceID, envUUID))
+	newEnv2, err2 := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow2", spaceID, envUUID2))
+	require.NoError(s.T(), err)
+	require.NoError(s.T(), err2)
+	require.NotNil(s.T(), newEnv)
+	require.NotNil(s.T(), newEnv2)
+
+	env, err := s.buildRepo.List(context.Background(), spaceID)
+	require.NoError(s.T(), err)
+	assert.NotNil(s.T(), env)
+	assert.Equal(s.T(), 2, len(env))
 }
 
 func newPipeline(name string, spaceID, envUUID uuid.UUID) *build.Pipeline {

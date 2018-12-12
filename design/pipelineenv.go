@@ -28,47 +28,70 @@ var pipelineEnv = a.Type("PipelineEnvironments", func() {
 	a.Required("name", "environments")
 })
 
+var pipelineEnvListMeta = a.Type("PipelineEnvironmentListMeta", func() {
+	a.Attribute("totalCount", d.Integer)
+	a.Required("totalCount")
+})
+
 var pipelineEnvSingle = JSONSingle(
 	"PipelineEnvironment", "Holds a single pipeline environment map",
 	pipelineEnv,
 	nil)
 
+var pipelineEnvList = JSONList(
+	"PipelineEnvironments", "Holds the list of pipeline environment map",
+	pipelineEnv,
+	pagingLinks,
+	pipelineEnvListMeta)
+
 var _ = a.Resource("PipelineEnvironments", func() {
 	a.Action("create", func() {
+		a.Description("Create pipeline environment map")
+		a.Params(func() {
+			a.Param("spaceID", d.UUID, "Space ID for the pipeline environment map")
+		})
 		a.Routing(
 			a.POST("/spaces/:spaceID/pipeline-environments"),
 		)
-		a.Description("Create environment")
-		a.Params(func() {
-			a.Param("spaceID", d.UUID, "UUID of the space")
-		})
 		a.Payload(pipelineEnvSingle)
 		a.Response(d.Created, pipelineEnvSingle)
 		a.Response(d.BadRequest, JSONAPIErrors)
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.Unauthorized, JSONAPIErrors)
 		a.Response(d.MethodNotAllowed, JSONAPIErrors)
+		a.Response(d.Forbidden, JSONAPIErrors)
 		a.Response(d.Conflict, JSONAPIErrors)
 		a.Response(d.NotFound, JSONAPIErrors)
 	})
 
-	a.Action("show", func() {
-		a.Description("Retrieve pipeline environment map (as JSONAPI) for the given space ID.")
+	a.Action("list", func() {
+		a.Description("Retrieve list of pipeline environment maps (as JSONAPI) for the given space ID.")
 		a.Params(func() {
 			a.Param("spaceID", d.UUID, "Space ID for the pipeline environment map")
 		})
-
 		a.Routing(
 			a.GET("/spaces/:spaceID/pipeline-environments"),
 		)
+		a.Response(d.OK, pipelineEnvList)
+		a.Response(d.InternalServerError, JSONAPIErrors)
+		a.Response(d.NotFound, JSONAPIErrors)
+		a.Response(d.Unauthorized, JSONAPIErrors)
+		a.Response(d.Forbidden, JSONAPIErrors)
+	})
 
+	a.Action("show", func() {
+		a.Description("Retrieve pipeline environment map (as JSONAPI) for the given ID.")
 		a.Params(func() {
-			a.Param("spaceID", d.UUID, "UUID of the space")
+			a.Param("ID", d.UUID, "ID of the pipeline environment map")
 		})
-
+		a.Routing(
+			a.GET("/pipeline-environments/:ID"),
+		)
 		a.Response(d.OK, pipelineEnvSingle)
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.NotFound, JSONAPIErrors)
+		a.Response(d.Unauthorized, JSONAPIErrors)
+		a.Response(d.Forbidden, JSONAPIErrors)
 	})
 
 })
