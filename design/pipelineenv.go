@@ -94,4 +94,23 @@ var _ = a.Resource("PipelineEnvironments", func() {
 		a.Response(d.Forbidden, JSONAPIErrors)
 	})
 
+	a.Action("update", func() {
+		a.Description("Update the pipeline environment map for the given ID.")
+		a.Params(func() {
+			a.Param("ID", d.UUID, "ID of the pipeline environment map to update")
+		})
+		a.Routing(
+			a.PATCH("/pipeline-environments/:ID"),
+		)
+		a.Payload(pipelineEnvSingle)
+		a.Response(d.OK, pipelineEnvSingle)
+		a.Response(d.InternalServerError, JSONAPIErrors)
+		a.Response(d.NotFound, JSONAPIErrors)
+		a.Response(d.BadRequest, JSONAPIErrors)
+		a.Response(d.Unauthorized, JSONAPIErrors)
+		a.Response(d.MethodNotAllowed, JSONAPIErrors)
+		a.Response(d.Conflict, JSONAPIErrors)
+		a.Response(d.Forbidden, JSONAPIErrors)
+	})
+
 })

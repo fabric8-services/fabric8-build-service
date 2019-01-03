@@ -91,10 +91,41 @@ func (s *BuildRepositorySuite) TestList() {
 	assert.Equal(s.T(), 0, len(env2))
 }
 
+func (s *BuildRepositorySuite) TestSave() {
+	spaceID, envUUID, envUUID2, envUUID3 := uuid.NewV4(), uuid.NewV4(), uuid.NewV4(), uuid.NewV4()
+	pipeline := newPipeline("pipelineShow", spaceID, envUUID)
+	newEnv, err := s.buildRepo.Create(context.Background(), pipeline)
+	newEnv2, err2 := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow2", spaceID, envUUID2))
+	require.NoError(s.T(), err)
+	require.NoError(s.T(), err2)
+	require.NotNil(s.T(), newEnv)
+	require.NotNil(s.T(), newEnv2)
+
+	pipelineUpdate := updatePipeline(pipeline, envUUID3)
+	env, err := s.buildRepo.Save(context.Background(), pipelineUpdate)
+	require.NoError(s.T(), err)
+	assert.NotNil(s.T(), env)
+	require.NotNil(s.T(), env)
+	require.NotNil(s.T(), env)
+	assert.Equal(s.T(), envUUID3, *(env.Environment[0].EnvironmentID))
+}
+
 func newPipeline(name string, spaceID, envUUID uuid.UUID) *build.Pipeline {
 	ppl := &build.Pipeline{
 		Name:    &name,
 		SpaceID: &spaceID,
+		Environment: []build.Environment{
+			{EnvironmentID: &envUUID},
+		},
+	}
+	return ppl
+}
+
+func updatePipeline(pipeline *build.Pipeline, envUUID uuid.UUID) *build.Pipeline {
+	ppl := &build.Pipeline{
+		Name:    pipeline.Name,
+		SpaceID: pipeline.SpaceID,
+		ID:      pipeline.ID,
 		Environment: []build.Environment{
 			{EnvironmentID: &envUUID},
 		},

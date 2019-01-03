@@ -42,11 +42,12 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 		return app.JSONErrorResponse(ctx, errors.NewUnauthorizedError(err.Error()))
 	}
 
-	reqPpl := ctx.Payload.Data
-	if reqPpl == nil {
-		return app.JSONErrorResponse(ctx, errors.NewBadParameterError("data", nil).Expected("not nil"))
+	err = validateCreatePipelineEnvironment(ctx)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
 	}
 
+	reqPpl := ctx.Payload.Data
 	spaceID := ctx.SpaceID
 	err = c.checkSpaceExist(ctx, spaceID.String())
 	if err != nil {
@@ -142,6 +143,57 @@ func (c *PipelineEnvironmentController) Show(ctx *app.ShowPipelineEnvironmentsCo
 	return ctx.OK(res)
 }
 
+// Update runs the save action.
+func (c *PipelineEnvironmentController) Update(ctx *app.UpdatePipelineEnvironmentsContext) error {
+	tokenMgr, err := token.ReadManagerFromContext(ctx)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
+	}
+	_, err = tokenMgr.Locate(ctx)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, errors.NewUnauthorizedError(err.Error()))
+	}
+
+	err = validateUpdatePipelineEnvironment(ctx)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
+	}
+
+	reqPpl := ctx.Payload.Data
+	spaceID := reqPpl.SpaceID
+	err = c.checkSpaceExist(ctx, spaceID.String())
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
+	}
+
+	newEnvs, err := c.checkEnvironmentExistAndConvert(ctx, spaceID.String(), reqPpl.Environments)
+	if err != nil {
+		return app.JSONErrorResponse(ctx, errors.NewNotFoundError("environment", err.Error()))
+	}
+
+	var ppl *build.Pipeline
+	err = application.Transactional(c.db, func(appl application.Application) error {
+		ppl, err = c.db.Pipeline().Load(ctx, ctx.ID)
+		if err != nil {
+			return app.JSONErrorResponse(ctx, err)
+		}
+
+		ppl.Name = &ctx.Payload.Data.Name
+		ppl.Environment = newEnvs
+		ppl, err = appl.Pipeline().Save(ctx, ppl)
+		return err
+	})
+	if err != nil {
+		return app.JSONErrorResponse(ctx, err)
+	}
+
+	data := convertToPipelineEnvironmentStruct(ppl)
+	res := &app.PipelineEnvironmentSingle{
+		Data: data,
+	}
+	return ctx.OK(res)
+}
+
 // This will check whether the given space exist or not
 func (c *PipelineEnvironmentController) checkSpaceExist(ctx context.Context, spaceID string) error {
 	// TODO(chmouel): Make sure we have the rights for that space
@@ -154,16 +206,16 @@ func (c *PipelineEnvironmentController) checkSpaceExist(ctx context.Context, spa
 }
 
 // This will check whether the env's exit and then convert to build.Environment List
-func (c *PipelineEnvironmentController) checkEnvironmentExistAndConvert(ctx *app.CreatePipelineEnvironmentsContext, spaceID string, envs []*app.EnvironmentAttributes) ([]build.Environment, error) {
+func (c *PipelineEnvironmentController) checkEnvironmentExistAndConvert(ctx context.Context, spaceID string, envs []*app.EnvironmentAttributes) ([]build.Environment, error) {
 	envList, err := c.svcFactory.ENVService().GetEnvList(ctx, spaceID)
 	if err != nil {
 		return nil, errs.Wrapf(err, "failed to get env list for space id: %s from env service", spaceID)
 	}
-	envUUIDList := convertToEnvUidList(envList)
+	envUUIDList := convertToEnvUIDList(envList)
 	var environments []build.Environment
 	for _, env := range envs {
-		envId, _ := guuid.FromString(env.EnvUUID.String())
-		envName := envUUIDList[envId]
+		envID, _ := guuid.FromString(env.EnvUUID.String())
+		envName := envUUIDList[envID]
 		if envName == "" {
 			return nil, errors.NewNotFoundError("environment", env.EnvUUID.String())
 		}
@@ -176,7 +228,7 @@ func (c *PipelineEnvironmentController) checkEnvironmentExistAndConvert(ctx *app
 
 // This will convert the list of env into map[envId]envName
 // this will help to check whether env exist or not
-func convertToEnvUidList(envList []env.Environment) map[guuid.UUID]string {
+func convertToEnvUIDList(envList []env.Environment) map[guuid.UUID]string {
 	var envMap = make(map[guuid.UUID]string)
 	for _, env := range envList {
 		envMap[env.ID] = env.Name
@@ -184,7 +236,7 @@ func convertToEnvUidList(envList []env.Environment) map[guuid.UUID]string {
 	return envMap
 }
 
-//this will convert the pipeline struct from database to pipeline-environment struct
+// this will convert the pipeline struct from database to pipeline-environment struct
 func convertToPipelineEnvironmentStruct(ppl *build.Pipeline) *app.PipelineEnvironments {
 	newEnvAttributes := []*app.EnvironmentAttributes{}
 	for _, pipeline := range ppl.Environment {
@@ -200,4 +252,36 @@ func convertToPipelineEnvironmentStruct(ppl *build.Pipeline) *app.PipelineEnviro
 		SpaceID:      ppl.SpaceID,
 	}
 	return pe
+}
+
+func validateCreatePipelineEnvironment(ctx *app.CreatePipelineEnvironmentsContext) error {
+	if ctx.Payload.Data == nil {
+		return errors.NewBadParameterError("data", nil).Expected("not nil")
+	}
+	if ctx.Payload.Data.SpaceID == nil {
+		return errors.NewBadParameterError("data.spaceId", nil).Expected("not nil")
+	}
+	if ctx.Payload.Data.Name == "" {
+		return errors.NewBadParameterError("data.name", nil).Expected("not nil")
+	}
+	if ctx.Payload.Data.Environments == nil || len(ctx.Payload.Data.Environments) == 0 {
+		return errors.NewBadParameterError("data.environments", nil).Expected("not nil")
+	}
+	return nil
+}
+
+func validateUpdatePipelineEnvironment(ctx *app.UpdatePipelineEnvironmentsContext) error {
+	if ctx.Payload.Data == nil {
+		return errors.NewBadParameterError("data", nil).Expected("not nil")
+	}
+	if ctx.Payload.Data.SpaceID == nil {
+		return errors.NewBadParameterError("data.spaceId", nil).Expected("not nil")
+	}
+	if ctx.Payload.Data.Name == "" {
+		return errors.NewBadParameterError("data.name", nil).Expected("not nil")
+	}
+	if ctx.Payload.Data.Environments == nil || len(ctx.Payload.Data.Environments) == 0 {
+		return errors.NewBadParameterError("data.environments", nil).Expected("not nil")
+	}
+	return nil
 }
