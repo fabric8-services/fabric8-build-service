@@ -110,6 +110,8 @@ function deploy_app() {
        F8_POSTGRES_DATABASE=build \
        F8_DEVELOPER_MODE_ENABLED=1 \
        F8_ENVIRONMENT=local F8_POSTGRES_SSLMODE=disable \
+	   F8_WIT_URL="http://${WIT_CONTAINER_NAME}:8080" \
+	   F8_ENV_URL="http://${ENV_CONTAINER_NAME}:8080" \
        F8_AUTH_URL="http://${AUTH_CONTAINER_NAME}:${AUTH_CONTAINER_PORT}"
 
     oc delete ${FORCE_DELETE_VARS} route/f8build 2>/dev/null || true
