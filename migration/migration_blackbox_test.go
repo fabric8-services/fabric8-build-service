@@ -104,10 +104,10 @@ func checkMigration001(t *testing.T) {
 
 	pipeline_id := "80654c22-c378-40bc-a76e-33a4bcc45f79"
 	t.Run("insert ok", func(t *testing.T) {
-		_, err := sqlDB.Exec(`INSERT INTO pipelines (id, name, space_id) VALUES ('` +
+		_, err := sqlDB.Exec(`INSERT INTO pipeline_env_maps (id, name, space_id) VALUES ('` +
 			pipeline_id + `', 'pipeline1', uuid_generate_v4())`)
 		require.NoError(t, err)
-		_, err = sqlDB.Exec("INSERT INTO environments (environment_id, pipeline_id) VALUES (uuid_generate_v4(), '" +
+		_, err = sqlDB.Exec("INSERT INTO pipeline_environments (environment_id, pipelineenvmap_id) VALUES (uuid_generate_v4(), '" +
 			pipeline_id + "')")
 		require.NoError(t, err)
 

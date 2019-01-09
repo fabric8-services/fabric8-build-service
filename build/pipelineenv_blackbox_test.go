@@ -27,22 +27,20 @@ func TestBuildRepository(t *testing.T) {
 
 func (s *BuildRepositorySuite) SetupSuite() {
 	s.DBTestSuite.SetupSuite()
-
 	s.buildRepo = build.NewRepository(s.DB)
-
 }
 
 func (s *BuildRepositorySuite) TestCreate() {
 	spaceID, envUUID := uuid.NewV4(), uuid.NewV4()
-	np := newPipeline("pipeline1", spaceID, envUUID)
+	np := newPipelineEnvMap("pipeline1", spaceID, envUUID)
 	ppl, err := s.buildRepo.Create(context.Background(), np)
 
 	require.NoError(s.T(), err)
 	require.NotNil(s.T(), ppl)
 
 	// Test that auto associations is done
-	assert.Equal(s.T(), 1, len(ppl.Environment))
-	assert.Equal(s.T(), ppl.ID, ppl.Environment[0].PipelineID)
+	assert.Equal(s.T(), 1, len(ppl.Environments))
+	assert.Equal(s.T(), ppl.ID, ppl.Environments[0].PipelineEnvMapID)
 
 	// Test unique constraint violation
 	ppl, err = s.buildRepo.Create(context.Background(), np)
@@ -51,30 +49,29 @@ func (s *BuildRepositorySuite) TestCreate() {
 	assert.Regexp(s.T(), ".*duplicate key value violates unique constraint.*", err.Error())
 
 	// Test empty name is a failure
-	npe := &build.Pipeline{}
+	npe := &build.PipelineEnvMap{}
 	ppl, err = s.buildRepo.Create(context.Background(), npe)
 	require.Error(s.T(), err)
 	require.EqualError(s.T(), err, "pq: null value in column \"name\" violates not-null constraint")
 	require.Nil(s.T(), ppl)
-
 }
 
 func (s *BuildRepositorySuite) TestShow() {
 	spaceID, envUUID := uuid.NewV4(), uuid.NewV4()
-	newEnv, err := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow", spaceID, envUUID))
+	newPipEnvMap, err := s.buildRepo.Create(context.Background(), newPipelineEnvMap("pipelineShow", spaceID, envUUID))
 	require.NoError(s.T(), err)
-	require.NotNil(s.T(), newEnv)
+	require.NotNil(s.T(), newPipEnvMap)
 
-	env, err := s.buildRepo.Load(context.Background(), newEnv.ID)
+	pipEnvMap, err := s.buildRepo.Load(context.Background(), newPipEnvMap.ID)
 	require.NoError(s.T(), err)
-	assert.NotNil(s.T(), env)
-	assert.Equal(s.T(), newEnv.ID, env.ID)
+	assert.NotNil(s.T(), pipEnvMap)
+	assert.Equal(s.T(), newPipEnvMap.ID, pipEnvMap.ID)
 }
 
 func (s *BuildRepositorySuite) TestList() {
 	spaceID, envUUID, envUUID2 := uuid.NewV4(), uuid.NewV4(), uuid.NewV4()
-	newEnv, err := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow", spaceID, envUUID))
-	newEnv2, err2 := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow2", spaceID, envUUID2))
+	newEnv, err := s.buildRepo.Create(context.Background(), newPipelineEnvMap("pipelineShow", spaceID, envUUID))
+	newEnv2, err2 := s.buildRepo.Create(context.Background(), newPipelineEnvMap("pipelineShow2", spaceID, envUUID2))
 	require.NoError(s.T(), err)
 	require.NoError(s.T(), err2)
 	require.NotNil(s.T(), newEnv)
@@ -93,40 +90,40 @@ func (s *BuildRepositorySuite) TestList() {
 
 func (s *BuildRepositorySuite) TestSave() {
 	spaceID, envUUID, envUUID2, envUUID3 := uuid.NewV4(), uuid.NewV4(), uuid.NewV4(), uuid.NewV4()
-	pipeline := newPipeline("pipelineShow", spaceID, envUUID)
+	pipeline := newPipelineEnvMap("pipelineShow", spaceID, envUUID)
 	newEnv, err := s.buildRepo.Create(context.Background(), pipeline)
-	newEnv2, err2 := s.buildRepo.Create(context.Background(), newPipeline("pipelineShow2", spaceID, envUUID2))
+	newEnv2, err2 := s.buildRepo.Create(context.Background(), newPipelineEnvMap("pipelineShow2", spaceID, envUUID2))
 	require.NoError(s.T(), err)
 	require.NoError(s.T(), err2)
 	require.NotNil(s.T(), newEnv)
 	require.NotNil(s.T(), newEnv2)
 
-	pipelineUpdate := updatePipeline(pipeline, envUUID3)
+	pipelineUpdate := updatePipelineEnvMap(pipeline, envUUID3)
 	env, err := s.buildRepo.Save(context.Background(), pipelineUpdate)
 	require.NoError(s.T(), err)
 	assert.NotNil(s.T(), env)
 	require.NotNil(s.T(), env)
 	require.NotNil(s.T(), env)
-	assert.Equal(s.T(), envUUID3, *(env.Environment[0].EnvironmentID))
+	assert.Equal(s.T(), envUUID3, *(env.Environments[0].EnvironmentID))
 }
 
-func newPipeline(name string, spaceID, envUUID uuid.UUID) *build.Pipeline {
-	ppl := &build.Pipeline{
+func newPipelineEnvMap(name string, spaceID, envUUID uuid.UUID) *build.PipelineEnvMap {
+	ppl := &build.PipelineEnvMap{
 		Name:    &name,
 		SpaceID: &spaceID,
-		Environment: []build.Environment{
+		Environments: []build.PipelineEnvironment{
 			{EnvironmentID: &envUUID},
 		},
 	}
 	return ppl
 }
 
-func updatePipeline(pipeline *build.Pipeline, envUUID uuid.UUID) *build.Pipeline {
-	ppl := &build.Pipeline{
-		Name:    pipeline.Name,
-		SpaceID: pipeline.SpaceID,
-		ID:      pipeline.ID,
-		Environment: []build.Environment{
+func updatePipelineEnvMap(pipEnvMap *build.PipelineEnvMap, envUUID uuid.UUID) *build.PipelineEnvMap {
+	ppl := &build.PipelineEnvMap{
+		Name:    pipEnvMap.Name,
+		SpaceID: pipEnvMap.SpaceID,
+		ID:      pipEnvMap.ID,
+		Environments: []build.PipelineEnvironment{
 			{EnvironmentID: &envUUID},
 		},
 	}

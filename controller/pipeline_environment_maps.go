@@ -15,24 +15,24 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-// PipelineEnvironmentController implements the PipelineEnvironment resource.
-type PipelineEnvironmentController struct {
+// PipelineEnvironmentMapsController implements the PipelineEnvironmentMaps resource.
+type PipelineEnvironmentMapsController struct {
 	*goa.Controller
 	db         application.DB
 	svcFactory application.ServiceFactory
 }
 
-// NewPipelineEnvironmentController creates a PipelineEnvironment controller.
-func NewPipelineEnvironmentController(service *goa.Service, db application.DB, svcFactory application.ServiceFactory) *PipelineEnvironmentController {
-	return &PipelineEnvironmentController{
-		Controller: service.NewController("PipelineEnvironmentController"),
+// NewPipelineEnvironmentMapsController creates a PipelineEnvironmentMaps controller.
+func NewPipelineEnvironmentMapsController(service *goa.Service, db application.DB, svcFactory application.ServiceFactory) *PipelineEnvironmentMapsController {
+	return &PipelineEnvironmentMapsController{
+		Controller: service.NewController("PipelineEnvironmentControllerMap"),
 		db:         db,
 		svcFactory: svcFactory,
 	}
 }
 
 // Create runs the create action.
-func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmentsContext) error {
+func (c *PipelineEnvironmentMapsController) Create(ctx *app.CreatePipelineEnvironmentMapsContext) error {
 	tokenMgr, err := token.ReadManagerFromContext(ctx)
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
@@ -42,7 +42,7 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 		return app.JSONErrorResponse(ctx, errors.NewUnauthorizedError(err.Error()))
 	}
 
-	err = validateCreatePipelineEnvironment(ctx)
+	err = validateCreatePipelineEnvironmentMap(ctx)
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
@@ -59,19 +59,19 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 		return app.JSONErrorResponse(ctx, errors.NewNotFoundError("environment", err.Error()))
 	}
 
-	var ppl *build.Pipeline
+	var ppl *build.PipelineEnvMap
 	err = application.Transactional(c.db, func(appl application.Application) error {
-		newPipeline := build.Pipeline{
-			Name:        &reqPpl.Name,
-			SpaceID:     &spaceID,
-			Environment: newEnvs,
+		newPipeline := build.PipelineEnvMap{
+			Name:         &reqPpl.Name,
+			SpaceID:      &spaceID,
+			Environments: newEnvs,
 		}
 
-		ppl, err = appl.Pipeline().Create(ctx, &newPipeline)
+		ppl, err = appl.PipelineEnvMap().Create(ctx, &newPipeline)
 		if err != nil {
 			log.Error(ctx, map[string]interface{}{"err": err},
-				"failed to create pipeline: %s", newPipeline.Name)
-			return errs.Wrapf(err, "failed to create pipeline: %s", *newPipeline.Name)
+				"failed to create pipelineenvmap: %s", newPipeline.Name)
+			return errs.Wrapf(err, "failed to create pipelineenvmap: %s", *newPipeline.Name)
 		}
 
 		return nil
@@ -82,14 +82,14 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 	}
 
 	newEnvAttributes := []*app.EnvironmentAttributes{}
-	for _, pipeline := range ppl.Environment {
+	for _, pipeline := range ppl.Environments {
 		newEnvAttributes = append(newEnvAttributes, &app.EnvironmentAttributes{
 			EnvUUID: pipeline.EnvironmentID,
 		})
 	}
 
-	res := &app.PipelineEnvironmentSingle{
-		Data: &app.PipelineEnvironments{
+	res := &app.PipelineEnvironmentMapSingle{
+		Data: &app.PipelineEnvironmentMaps{
 			ID:           &ppl.ID,
 			Name:         *ppl.Name,
 			Environments: newEnvAttributes,
@@ -99,52 +99,52 @@ func (c *PipelineEnvironmentController) Create(ctx *app.CreatePipelineEnvironmen
 
 	ctx.ResponseData.Header().Set(
 		"Location",
-		httpsupport.AbsoluteURL(&goa.RequestData{Request: ctx.Request}, app.PipelineEnvironmentsHref(res.Data.ID), nil),
+		httpsupport.AbsoluteURL(&goa.RequestData{Request: ctx.Request}, app.PipelineEnvironmentMapsHref(res.Data.ID), nil),
 	)
 	return ctx.Created(res)
 }
 
 // List runs the list action.
-func (c *PipelineEnvironmentController) List(ctx *app.ListPipelineEnvironmentsContext) error {
+func (c *PipelineEnvironmentMapsController) List(ctx *app.ListPipelineEnvironmentMapsContext) error {
 	spaceID := ctx.SpaceID
 	err := c.checkSpaceExist(ctx, spaceID.String())
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
 
-	pplenv, err := c.db.Pipeline().List(ctx, spaceID)
+	pplenvmaps, err := c.db.PipelineEnvMap().List(ctx, spaceID)
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
 
-	newPipelineList := []*app.PipelineEnvironments{}
-	for _, ppl := range pplenv {
-		newPipelineList = append(newPipelineList, convertToPipelineEnvironmentStruct(ppl))
+	newPipelineEnvMapList := []*app.PipelineEnvironmentMaps{}
+	for _, pipEnvMap := range pplenvmaps {
+		newPipelineEnvMapList = append(newPipelineEnvMapList, convertToPipelineEnvironmentMapStruct(pipEnvMap))
 	}
 
-	res := &app.PipelineEnvironmentsList{
-		Data: newPipelineList,
+	res := &app.PipelineEnvironmentMapsList{
+		Data: newPipelineEnvMapList,
 	}
 	return ctx.OK(res)
 }
 
 // Show runs the load action.
-func (c *PipelineEnvironmentController) Show(ctx *app.ShowPipelineEnvironmentsContext) error {
+func (c *PipelineEnvironmentMapsController) Show(ctx *app.ShowPipelineEnvironmentMapsContext) error {
 	envID := ctx.ID
-	ppl, err := c.db.Pipeline().Load(ctx, envID)
+	pipenvmap, err := c.db.PipelineEnvMap().Load(ctx, envID)
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
 
-	data := convertToPipelineEnvironmentStruct(ppl)
-	res := &app.PipelineEnvironmentSingle{
+	data := convertToPipelineEnvironmentMapStruct(pipenvmap)
+	res := &app.PipelineEnvironmentMapSingle{
 		Data: data,
 	}
 	return ctx.OK(res)
 }
 
 // Update runs the save action.
-func (c *PipelineEnvironmentController) Update(ctx *app.UpdatePipelineEnvironmentsContext) error {
+func (c *PipelineEnvironmentMapsController) Update(ctx *app.UpdatePipelineEnvironmentMapsContext) error {
 	tokenMgr, err := token.ReadManagerFromContext(ctx)
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
@@ -154,7 +154,7 @@ func (c *PipelineEnvironmentController) Update(ctx *app.UpdatePipelineEnvironmen
 		return app.JSONErrorResponse(ctx, errors.NewUnauthorizedError(err.Error()))
 	}
 
-	err = validateUpdatePipelineEnvironment(ctx)
+	err = validateUpdatePipelineEnvironmentMap(ctx)
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
@@ -171,31 +171,31 @@ func (c *PipelineEnvironmentController) Update(ctx *app.UpdatePipelineEnvironmen
 		return app.JSONErrorResponse(ctx, errors.NewNotFoundError("environment", err.Error()))
 	}
 
-	var ppl *build.Pipeline
+	var ppl *build.PipelineEnvMap
 	err = application.Transactional(c.db, func(appl application.Application) error {
-		ppl, err = c.db.Pipeline().Load(ctx, ctx.ID)
+		ppl, err = c.db.PipelineEnvMap().Load(ctx, ctx.ID)
 		if err != nil {
 			return app.JSONErrorResponse(ctx, err)
 		}
 
 		ppl.Name = &ctx.Payload.Data.Name
-		ppl.Environment = newEnvs
-		ppl, err = appl.Pipeline().Save(ctx, ppl)
+		ppl.Environments = newEnvs
+		ppl, err = appl.PipelineEnvMap().Save(ctx, ppl)
 		return err
 	})
 	if err != nil {
 		return app.JSONErrorResponse(ctx, err)
 	}
 
-	data := convertToPipelineEnvironmentStruct(ppl)
-	res := &app.PipelineEnvironmentSingle{
+	data := convertToPipelineEnvironmentMapStruct(ppl)
+	res := &app.PipelineEnvironmentMapSingle{
 		Data: data,
 	}
 	return ctx.OK(res)
 }
 
 // This will check whether the given space exist or not
-func (c *PipelineEnvironmentController) checkSpaceExist(ctx context.Context, spaceID string) error {
+func (c *PipelineEnvironmentMapsController) checkSpaceExist(ctx context.Context, spaceID string) error {
 	// TODO(chmouel): Make sure we have the rights for that space
 	// TODO(chmouel): Better error reporting when NOTFound
 	_, err := c.svcFactory.WITService().GetSpace(ctx, spaceID)
@@ -206,20 +206,20 @@ func (c *PipelineEnvironmentController) checkSpaceExist(ctx context.Context, spa
 }
 
 // This will check whether the env's exit and then convert to build.Environment List
-func (c *PipelineEnvironmentController) checkEnvironmentExistAndConvert(ctx context.Context, spaceID string, envs []*app.EnvironmentAttributes) ([]build.Environment, error) {
+func (c *PipelineEnvironmentMapsController) checkEnvironmentExistAndConvert(ctx context.Context, spaceID string, envs []*app.EnvironmentAttributes) ([]build.PipelineEnvironment, error) {
 	envList, err := c.svcFactory.ENVService().GetEnvList(ctx, spaceID)
 	if err != nil {
 		return nil, errs.Wrapf(err, "failed to get env list for space id: %s from env service", spaceID)
 	}
 	envUUIDList := convertToEnvUIDList(envList)
-	var environments []build.Environment
+	var environments []build.PipelineEnvironment
 	for _, env := range envs {
 		envID, _ := guuid.FromString(env.EnvUUID.String())
 		envName := envUUIDList[envID]
 		if envName == "" {
 			return nil, errors.NewNotFoundError("environment", env.EnvUUID.String())
 		}
-		environments = append(environments, build.Environment{
+		environments = append(environments, build.PipelineEnvironment{
 			EnvironmentID: env.EnvUUID,
 		})
 	}
@@ -237,15 +237,15 @@ func convertToEnvUIDList(envList []env.Environment) map[guuid.UUID]string {
 }
 
 // this will convert the pipeline struct from database to pipeline-environment struct
-func convertToPipelineEnvironmentStruct(ppl *build.Pipeline) *app.PipelineEnvironments {
+func convertToPipelineEnvironmentMapStruct(ppl *build.PipelineEnvMap) *app.PipelineEnvironmentMaps {
 	newEnvAttributes := []*app.EnvironmentAttributes{}
-	for _, pipeline := range ppl.Environment {
+	for _, pipelineEnv := range ppl.Environments {
 		newEnvAttributes = append(newEnvAttributes, &app.EnvironmentAttributes{
-			EnvUUID: pipeline.EnvironmentID,
+			EnvUUID: pipelineEnv.EnvironmentID,
 		})
 	}
 
-	pe := &app.PipelineEnvironments{
+	pe := &app.PipelineEnvironmentMaps{
 		ID:           &ppl.ID,
 		Name:         *ppl.Name,
 		Environments: newEnvAttributes,
@@ -254,7 +254,7 @@ func convertToPipelineEnvironmentStruct(ppl *build.Pipeline) *app.PipelineEnviro
 	return pe
 }
 
-func validateCreatePipelineEnvironment(ctx *app.CreatePipelineEnvironmentsContext) error {
+func validateCreatePipelineEnvironmentMap(ctx *app.CreatePipelineEnvironmentMapsContext) error {
 	if ctx.Payload.Data == nil {
 		return errors.NewBadParameterError("data", nil).Expected("not nil")
 	}
@@ -270,7 +270,7 @@ func validateCreatePipelineEnvironment(ctx *app.CreatePipelineEnvironmentsContex
 	return nil
 }
 
-func validateUpdatePipelineEnvironment(ctx *app.UpdatePipelineEnvironmentsContext) error {
+func validateUpdatePipelineEnvironmentMap(ctx *app.UpdatePipelineEnvironmentMapsContext) error {
 	if ctx.Payload.Data == nil {
 		return errors.NewBadParameterError("data", nil).Expected("not nil")
 	}

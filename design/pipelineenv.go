@@ -12,49 +12,49 @@ var envAttrs = a.Type("EnvironmentAttributes", func() {
 	})
 })
 
-var pipelineEnv = a.Type("PipelineEnvironments", func() {
+var pipelineEnvMap = a.Type("PipelineEnvironmentMaps", func() {
 	a.Description(`JSONAPI store for data of pipeline environments.`)
-	a.Attribute("id", d.UUID, "ID of the pipeline environment", func() {
+	a.Attribute("id", d.UUID, "ID of the pipeline environment map", func() {
 		a.Example("40bbdd3d-8b5d-4fd6-ac90-7236b669af04")
 	})
-	a.Attribute("spaceID", d.UUID, "ID of the pipeline environment", func() {
+	a.Attribute("spaceID", d.UUID, "ID of the pipeline environment map", func() {
 		a.Example("40bbdd3d-8b5d-4fd6-ac90-7236b669af04")
 	})
 	a.Attribute("name", d.String, "The environment name", func() {
 		a.Example("myapp-stage")
 	})
-	a.Attribute("environments", a.ArrayOf(envAttrs), "An array of environMents")
+	a.Attribute("environments", a.ArrayOf(envAttrs), "An array of environments")
 	a.Attribute("links", genericLinks)
 	a.Required("name", "environments")
 })
 
-var pipelineEnvListMeta = a.Type("PipelineEnvironmentListMeta", func() {
+var pipelineEnvMapListMeta = a.Type("PipelineEnvironmentListMeta", func() {
 	a.Attribute("totalCount", d.Integer)
 	a.Required("totalCount")
 })
 
-var pipelineEnvSingle = JSONSingle(
-	"PipelineEnvironment", "Holds a single pipeline environment map",
-	pipelineEnv,
+var pipelineEnvMapSingle = JSONSingle(
+	"PipelineEnvironmentMap", "Holds a single pipeline environment map",
+	pipelineEnvMap,
 	nil)
 
-var pipelineEnvList = JSONList(
-	"PipelineEnvironments", "Holds the list of pipeline environment map",
-	pipelineEnv,
+var pipelineEnvMapList = JSONList(
+	"PipelineEnvironmentMaps", "Holds the list of pipeline environment map",
+	pipelineEnvMap,
 	pagingLinks,
-	pipelineEnvListMeta)
+	pipelineEnvMapListMeta)
 
-var _ = a.Resource("PipelineEnvironments", func() {
+var _ = a.Resource("PipelineEnvironmentMaps", func() {
 	a.Action("create", func() {
 		a.Description("Create pipeline environment map")
 		a.Params(func() {
 			a.Param("spaceID", d.UUID, "Space ID for the pipeline environment map")
 		})
 		a.Routing(
-			a.POST("/spaces/:spaceID/pipeline-environments"),
+			a.POST("/spaces/:spaceID/pipeline-environment-maps"),
 		)
-		a.Payload(pipelineEnvSingle)
-		a.Response(d.Created, pipelineEnvSingle)
+		a.Payload(pipelineEnvMapSingle)
+		a.Response(d.Created, pipelineEnvMapSingle)
 		a.Response(d.BadRequest, JSONAPIErrors)
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.Unauthorized, JSONAPIErrors)
@@ -70,9 +70,9 @@ var _ = a.Resource("PipelineEnvironments", func() {
 			a.Param("spaceID", d.UUID, "Space ID for the pipeline environment map")
 		})
 		a.Routing(
-			a.GET("/spaces/:spaceID/pipeline-environments"),
+			a.GET("/spaces/:spaceID/pipeline-environment-maps"),
 		)
-		a.Response(d.OK, pipelineEnvList)
+		a.Response(d.OK, pipelineEnvMapList)
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.BadRequest, JSONAPIErrors)
 		a.Response(d.Unauthorized, JSONAPIErrors)
@@ -85,9 +85,9 @@ var _ = a.Resource("PipelineEnvironments", func() {
 			a.Param("ID", d.UUID, "ID of the pipeline environment map")
 		})
 		a.Routing(
-			a.GET("/pipeline-environments/:ID"),
+			a.GET("/pipeline-environment-maps/:ID"),
 		)
-		a.Response(d.OK, pipelineEnvSingle)
+		a.Response(d.OK, pipelineEnvMapSingle)
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.NotFound, JSONAPIErrors)
 		a.Response(d.Unauthorized, JSONAPIErrors)
@@ -100,10 +100,10 @@ var _ = a.Resource("PipelineEnvironments", func() {
 			a.Param("ID", d.UUID, "ID of the pipeline environment map to update")
 		})
 		a.Routing(
-			a.PATCH("/pipeline-environments/:ID"),
+			a.PATCH("/pipeline-environment-maps/:ID"),
 		)
-		a.Payload(pipelineEnvSingle)
-		a.Response(d.OK, pipelineEnvSingle)
+		a.Payload(pipelineEnvMapSingle)
+		a.Response(d.OK, pipelineEnvMapSingle)
 		a.Response(d.InternalServerError, JSONAPIErrors)
 		a.Response(d.NotFound, JSONAPIErrors)
 		a.Response(d.BadRequest, JSONAPIErrors)

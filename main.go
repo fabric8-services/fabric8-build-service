@@ -142,8 +142,8 @@ func main() {
 	appDB := gormapp.NewGormDB(db)
 
 	// Mount the 'pipeline environment map' controller
-	pipelineEnvCtrl := controller.NewPipelineEnvironmentController(service, appDB, svcFactory)
-	app.MountPipelineEnvironmentsController(service, pipelineEnvCtrl)
+	pipelineEnvCtrl := controller.NewPipelineEnvironmentMapsController(service, appDB, svcFactory)
+	app.MountPipelineEnvironmentMapsController(service, pipelineEnvCtrl)
 
 	log.Logger().Infoln("Git Commit SHA: ", app.Commit)
 	log.Logger().Infoln("UTC Build Time: ", app.BuildTime)

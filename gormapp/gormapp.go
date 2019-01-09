@@ -93,6 +93,6 @@ func (g *GormTransaction) Rollback() error {
 	return errors.WithStack(err)
 }
 
-func (g *GormBase) Pipeline() build.Repository {
+func (g *GormBase) PipelineEnvMap() build.Repository {
 	return build.NewRepository(g.db)
 }

@@ -3,7 +3,7 @@ package application
 import "github.com/fabric8-services/fabric8-build/build"
 
 type Application interface {
-	Pipeline() build.Repository
+	PipelineEnvMap() build.Repository
 }
 
 type Transaction interface {
